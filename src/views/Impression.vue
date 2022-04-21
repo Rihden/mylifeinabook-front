@@ -60,7 +60,7 @@
         <div class="print-section-container d-flex-centered">
           <div class="main-section-container">
             <div class="left-side-print">
-              <img src="/cover-style1.jpg" class="print-image" />
+              <img src="/cover-style1.png" class="print-image" />
             </div>
 
             <div class="right-side-print">

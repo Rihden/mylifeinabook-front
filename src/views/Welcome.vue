@@ -8,12 +8,7 @@
       >
         <div class="welcome-content-container d-col">
           <div style="margin-bottom: 28px">
-            <img
-              :src="serverUrl + '/' + user.avatar"
-              height="44px"
-              width="44px"
-              alt=""
-            />
+            <img :src="'/' + user.avatar" height="44px" width="44px" alt="" />
           </div>
 
           <div style="margin-bottom: 32px">

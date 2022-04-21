@@ -28,7 +28,7 @@
                 }"
               >
                 <img
-                  :src="'/cover-style' + (indexStyles + 1) + '.jpg'"
+                  :src="'/cover-style' + (indexStyles + 1) + '.png'"
                   alt=""
                   class="cover-template-image"
                 />
