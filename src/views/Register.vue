@@ -395,8 +395,7 @@ export default {
       if (this.email.length > 50) {
         this.emailError = true;
         this.$refs.emailInput.focus();
-        this.errorMessage1 =
-          "L'adresse email ne doit pas dépasser 50 caractères.";
+        this.errorMessage1 = "Email address cannot exceed 50 characters.";
         this.step = 1;
 
         return false;
@@ -404,7 +403,7 @@ export default {
       if (!this.email.match(mailformat)) {
         this.emailError = true;
         this.$refs.emailInput.focus();
-        this.errorMessage1 = "L'adresse email doit être valide.";
+        this.errorMessage1 = "Invalid Email address.";
         this.step = 1;
 
         return false;
@@ -413,8 +412,7 @@ export default {
         this.password1Error = true;
         this.$refs.password1Input.focus();
 
-        this.errorMessage1 =
-          "Le mot de passe doit contenir au moin 6 caractères.";
+        this.errorMessage1 = "Password has to be at least 6 characters long.";
         this.step = 1;
 
         return false;
@@ -422,8 +420,7 @@ export default {
       if (this.password1.length > 30) {
         this.password1Error = true;
         this.$refs.password1Input.focus();
-        this.errorMessage1 =
-          "Le mot de passe ne doit pas dépasser 30 caractères.";
+        this.errorMessage1 = "Password cannot exceed 30 characters.";
         this.step = 1;
 
         return false;
@@ -431,7 +428,7 @@ export default {
       if (this.password1 != this.password2) {
         this.password2Error = true;
         this.$refs.password2Input.focus();
-        this.errorMessage1 = "Les mots de passes doivent être identiques.";
+        this.errorMessage1 = "Passwords do not match";
         this.step = 1;
 
         return false;
@@ -444,11 +441,11 @@ export default {
       this.avatarError = false;
       this.nameError = false;
       this.name = this.name.trim();
-      const letters = /^[A-Za-zÄÖÜäöüßéèàûîï]+$/;
+      const letters = /^[A-Za-zÄÖÜäöüßéèàûîï ]+$/;
       if (this.name === "") {
         this.nameError = true;
         this.$refs.nameInput.focus();
-        this.errorMessage2 = "Le prénom est obligatoire.";
+        this.errorMessage2 = "Name is required.";
         this.step = 2;
 
         return false;
@@ -456,7 +453,7 @@ export default {
       if (this.name.length > 30) {
         this.nameError = true;
         this.$refs.nameInput.focus();
-        this.errorMessage2 = "Le nom ne doit pas dépasser 30 caractères.";
+        this.errorMessage2 = "Name cannot exceed 30 characters.";
         this.step = 2;
 
         return false;
@@ -464,8 +461,7 @@ export default {
       if (!this.name.match(letters)) {
         this.nameError = true;
         this.$refs.nameInput.focus();
-        this.errorMessage2 =
-          "Le prénom ne doit contenir que des lettres ou espaces.";
+        this.errorMessage2 = "Name can only contain letters and spaces.";
         this.step = 2;
 
         return false;
