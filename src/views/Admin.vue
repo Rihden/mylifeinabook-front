@@ -89,6 +89,7 @@
             <div class="d-row table-title-row">
               <div class="table-title-element">Order</div>
               <div class="table-title-element">E-mail</div>
+              <div class="table-title-element">Adress</div>
               <div class="table-title-element" style="flex-grow: 1">
                 Confirmed on
               </div>
@@ -112,6 +113,19 @@
                   <span>
                     {{ user.email }}
                   </span>
+                </div>
+                <div class="table-title-element">
+                  <div class="tooltip" v-if="user.streetLine1">
+                    Adress here
+                    <span class="tooltiptext">
+                      {{ user.adressName }}<br />
+                      {{ user.streetLine1 }}<br />
+                      {{ user.country }}<br />
+                      {{ user.city }}<br />
+                      {{ user.zipCode }}<br />
+                      {{ user.state }}</span
+                    >
+                  </div>
                 </div>
                 <div class="table-title-element" style="flex-grow: 1">
                   <span v-if="user.printDate"
@@ -178,9 +192,9 @@
 </template>
 
 <script>
-import navbar from "../components/navbar.vue";
-import { serverUrl } from "../severUrl";
-import axios from "axios";
+import navbar from "../components/navbar.vue"
+import { serverUrl } from "../severUrl"
+import axios from "axios"
 export default {
   components: {
     navbar,
@@ -193,117 +207,117 @@ export default {
       loading: false,
       deletingUserId: "",
       isDeletingUser: false,
-    };
+    }
   },
 
   methods: {
     cancelDeletingUser: function () {
-      this.showingOverlay = false;
-      this.isDeletingUser = false;
-      this.deletingUserId = "";
+      this.showingOverlay = false
+      this.isDeletingUser = false
+      this.deletingUserId = ""
     },
     startDeletingUser: function (id) {
-      this.showingOverlay = true;
-      this.isDeletingUser = true;
-      this.deletingUserId = id;
+      this.showingOverlay = true
+      this.isDeletingUser = true
+      this.deletingUserId = id
     },
     deleteUser: async function () {
       try {
-        this.showingOverlay = true;
-        this.loading = true;
+        this.showingOverlay = true
+        this.loading = true
 
         await axios.delete(serverUrl + "/api/users/" + this.deletingUserId, {
           withCredentials: true,
-        });
-        await this.fetchUsersData();
-        this.showingOverlay = false;
-        this.loading = false;
+        })
+        await this.fetchUsersData()
+        this.showingOverlay = false
+        this.loading = false
       } catch (error) {
-        console.log(error);
-        this.showingOverlay = false;
-        this.loading = false;
+        console.log(error)
+        this.showingOverlay = false
+        this.loading = false
       }
     },
     filterTable: function (index) {
-      this.panelIndex = index;
+      this.panelIndex = index
     },
     downloadAudit: function () {
       try {
-        window.open(serverUrl + "/api/users/audit");
+        window.open(serverUrl + "/api/users/audit")
       } catch (error) {
-        console.log(error);
+        console.log(error)
       }
     },
     downloadUserFiles: function (id) {
-      window.open(serverUrl + "/api/users/files/" + id);
+      window.open(serverUrl + "/api/users/files/" + id)
     },
     updateStatus: async function (user, newStatus) {
-      console.log(user.printStatus);
+      console.log(user.printStatus)
       try {
         const response = await axios.put(
           serverUrl + "/api/users/update-status",
           { status: newStatus, id: user._id },
           { withCredentials: true }
-        );
+        )
         if (response.status == 200) {
-          user.printStatus = newStatus;
+          user.printStatus = newStatus
         }
-        console.log(response.status);
+        console.log(response.status)
       } catch (error) {
-        console.log(error);
+        console.log(error)
         alert(
           "An error occured while updating user " +
             user.orderId +
             "Please refresh the page and try again"
-        );
+        )
       }
     },
     fetchUsersData: async function () {
       try {
-        this.loading = true;
-        this.showingOverlay = true;
+        this.loading = true
+        this.showingOverlay = true
         const response = await axios.get(serverUrl + "/api/users", {
           withCredentials: true,
-        });
-        this.usersData = response.data;
-        this.loading = false;
-        this.showingOverlay = false;
+        })
+        this.usersData = response.data
+        this.loading = false
+        this.showingOverlay = false
       } catch (error) {
-        console.log(error);
-        this.loading = false;
-        this.showingOverlay = false;
+        console.log(error)
+        this.loading = false
+        this.showingOverlay = false
       }
     },
   },
   computed: {
     user: function () {
-      return this.$store.getters.getUser;
+      return this.$store.getters.getUser
     },
     filteredUsersData: function () {
       return this.usersData.filter((user) => {
         if (this.panelIndex == 0) {
-          return user.printStatus == "pending";
+          return user.printStatus == "pending"
         }
         if (this.panelIndex == 1) {
-          return user.printStatus == "printing";
+          return user.printStatus == "printing"
         }
         if (this.panelIndex == 2) {
-          return user.printStatus == "writing";
+          return user.printStatus == "writing"
         }
         if (this.panelIndex == 3) {
-          return user.printStatus == "done";
+          return user.printStatus == "done"
         }
-      });
+      })
     },
   },
   async created() {
     try {
-      await this.fetchUsersData();
+      await this.fetchUsersData()
     } catch (error) {
-      console.log(error);
+      console.log(error)
     }
   },
-};
+}
 </script>
 
 <style>
@@ -385,5 +399,29 @@ export default {
   color: white;
   margin-right: 30px;
   border: none;
+}
+.tooltip {
+  position: relative;
+  display: inline-block;
+  font-size: 11px;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 200px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 15px 10px;
+  font-size: 13px;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
 }
 </style>

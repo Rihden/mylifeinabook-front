@@ -52,9 +52,9 @@
 </template>
 
 <script>
-import axios from "axios";
-import { serverUrl } from "./severUrl";
-import LoadinComponent from "./components/Loading.vue";
+import axios from "axios"
+import { serverUrl } from "./severUrl"
+import LoadinComponent from "./components/Loading.vue"
 export default {
   name: "App",
   components: {
@@ -98,19 +98,19 @@ export default {
         },
       ],
       loading: true,
-    };
+    }
   },
   methods: {
     hideOverlay: async function () {
-      this.isOverlayShown = false;
-      this.user.hasSeenTips = true;
+      this.isOverlayShown = false
+      this.user.hasSeenTips = true
       const response = await axios.put(serverUrl + "/api/users/", this.user, {
         withCredentials: true,
-      });
-      const userString = JSON.stringify(this.user);
-      localStorage.setItem("user", userString);
+      })
+      const userString = JSON.stringify(this.user)
+      localStorage.setItem("user", userString)
       if (!response.status == 200) {
-        console.log(response.data);
+        console.log(response.data)
       }
     },
     getUser: async function () {
@@ -118,29 +118,29 @@ export default {
         const response = await axios.get(
           serverUrl + "/api/users/61a4e3235118691817f7cb9d",
           { withCredentials: true }
-        );
+        )
         if (response.status == 200) {
-          this.user = response.data;
-          console.log("got user from app component");
-        } else console.log(response.data);
+          this.user = response.data
+          console.log("got user from app component")
+        } else console.log(response.data)
       } catch (error) {
-        console.log(error);
+        console.log(error)
       }
     },
     checkCover: async function (payload) {
-      console.log(payload);
-      this.hasCover = payload;
+      console.log(payload)
+      this.hasCover = payload
     },
   },
   computed: {
     user: function () {
-      return this.$store.getters.getUser;
+      return this.$store.getters.getUser
     },
   },
   mounted() {
-    this.loading = false;
+    this.loading = false
   },
-};
+}
 </script>
 
 <style>
@@ -183,18 +183,19 @@ body {
 
   .route-section {
     height: 100%;
+    background-color: #f6f4f3;
   }
 
   .container {
-    height: calc(100% - 64px);
     overflow-y: auto;
+    background-color: #f6f4f3;
   }
 }
 @media screen and (min-resolution: 120dpi) and (min-width: 1024px) {
   html {
     transform: scale(0.8);
     transform-origin: top left;
-    height: 125%;
+    height: 125% !important;
     width: 125%;
     overflow: hidden;
   }
@@ -283,7 +284,12 @@ input::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
-
+.title-section {
+  font-size: 24px;
+  font-family: galaxie-polaris, arial;
+  line-height: 25.66px;
+  font-weight: 550;
+}
 #app {
   height: 100%;
   font-family: galaxie-polaris, arial;
@@ -388,7 +394,7 @@ a {
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   z-index: 4;
@@ -412,6 +418,10 @@ a {
   font-weight: 500;
   color: #062a20;
   margin-bottom: 20px;
+}
+.d-flex-spaced {
+  display: flex;
+  justify-content: space-between;
 }
 
 .pop-up-paragraph {
@@ -512,11 +522,14 @@ a {
 @media screen and (max-width: 1024px) {
   .site-background {
     padding: 0px;
-    background: none;
+    background-color: #f6f4f3;
     position: relative;
     height: calc(100vh - calc(100vh - 100%));
     height: webkit-fill-available;
     display: block;
+  }
+  .overlay.mobile {
+    display: flex !important;
   }
   .route-section {
     border-radius: 0px;

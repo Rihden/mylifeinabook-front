@@ -291,7 +291,6 @@ export default {
     background: none;
   }
   .route-section {
-    background: white;
     padding: 24px;
   }
   .register-form-container {

@@ -7,22 +7,48 @@
     </div>
     <div class="d-flex-centered d-col route-section">
       <div
-        class="logo-container"
-        :class="{ 'hidden-logo': showingForgotPassword }"
+        class="d-col register-form-container"
+        v-if="!emailSent && !emailTokenSent"
       >
-        <img
-          src="../assets/logo - black.png"
-          alt="logo ma vie"
-          height="107px"
-          width="83px"
-        />
-      </div>
-      <div class="d-col register-form-container" v-if="!emailSent">
+        <div
+          class="logo-container"
+          :class="{ 'hidden-logo': showingForgotPassword }"
+        >
+          <img
+            src="../assets/logo-mylife.png"
+            alt="logo my life"
+            width="auto"
+          />
+        </div>
         <div v-if="!showingForgotPassword">
           <div class="title-container">
             <div class="form-title-container">
-              <span style="text-align: center">Login</span>
+              <span style="text-align: center">Log In</span>
             </div>
+            <div class="form-subtitle-container" style="margin-bottom: 15px">
+              <span style="text-align: center"
+                >Enter your email address to log in to your account. We'll send
+                you a secured link to log in.</span
+              >
+            </div>
+          </div>
+
+          <div class="register-form-section">
+            <input
+              type="text"
+              placeholder="E-mail"
+              v-model="emailToken"
+              class="register-input"
+              @keypress.enter="getToken()"
+            />
+            <div class="register-form-section spaced" style="margin-top: 10px">
+              <button @click="getToken()" class="get-token-btn">
+                LOG IN VIA EMAIL
+              </button>
+            </div>
+          </div>
+          <div class="form-section-seprator" style="text-align: center">
+            <span style="text-align: center">Or</span>
           </div>
           <div class="register-form-section error-msg-container">
             <span class="register-form-error" v-if="errorMessage">
@@ -66,7 +92,7 @@
             </div>
           </div>
           <div class="register-form-section spaced">
-            <button @click="login()" class="login-btn">CONTINUE</button>
+            <button @click="login()" class="login-btn">Log In</button>
           </div>
           <div class="register-form-section" style="margin-bottom: 0px">
             <div>
@@ -161,14 +187,24 @@
           </span>
         </div>
       </div>
+      <div v-if="emailTokenSent" class="login-token-container">
+        <div class="email-token-sent-title">
+          <span>Your login link is on its way</span>
+        </div>
+        <div class="email-sent-info-container">
+          <span class="email-token-sent-info">
+            We’ve sent a login email to {{ emailToken }}. Check your email and
+            click the link to log in.
+          </span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { serverUrl } from "../severUrl";
-import axios from "axios";
-
+import { serverUrl } from "../severUrl"
+import axios from "axios"
 export default {
   data() {
     return {
@@ -183,132 +219,210 @@ export default {
       isPassword: "password",
       showingForgotPassword: false,
       emailSent: false,
-    };
+      emailTokenSent: false,
+      orderId: "",
+      isBuyer: "",
+      questionId: "",
+      chapterId: "",
+      tokenSh: "",
+      emailToken: "",
+    }
   },
   methods: {
     showForgotPassword: function () {
-      this.showingForgotPassword = true;
+      this.showingForgotPassword = true
     },
     hideForgotPassword: function () {
-      this.showingForgotPassword = false;
+      this.showingForgotPassword = false
     },
     toggleShowPassword: function () {
       if (this.isPassword == "password") {
-        this.isPassword = "text";
+        this.isPassword = "text"
       } else {
-        this.isPassword = "password";
+        this.isPassword = "password"
       }
     },
     login: async function () {
+      const mailformat = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
+      if (!this.tokenSh && !this.orderId) {
+        if (
+          !this.email ||
+          this.email.length > 50 ||
+          !this.email.match(mailformat)
+        ) {
+          alert("please enter an email and respect its format")
+          return
+        }
+      }
+
       try {
-        this.loading = true;
-        this.showingOverlay = true;
+        this.loading = true
+        this.showingOverlay = true
         const response = await axios.post(
           serverUrl + "/auth/login",
           {
             email: this.email.toLowerCase(),
             password: this.password,
+            orderId: this.orderId,
+            isBuyer: this.isBuyer,
+            token: this.tokenSh,
           },
           { withCredentials: true }
-        );
+        )
         if (response.status == 200) {
-          this.$store.commit("setUser", response.data);
-          this.loading = false;
-          this.showingOverlay = false;
-          this.$router.push("/welcome");
+          this.$store.commit("setUser", response.data)
+          this.loading = false
+          this.showingOverlay = false
+          console.log(this.$router)
+          const historyLocation = this.questionId
+            ? `/?question-id=${this.questionId}&chapter-id=${this.chapterId}`
+            : this.$router.history._startLocation
+          this.$router.push(
+            historyLocation.toLowerCase().indexOf("login") === -1 &&
+              historyLocation.toLowerCase().indexOf("register") === -1
+              ? historyLocation
+              : "/"
+          )
         }
       } catch (error) {
-        this.loading = false;
-        this.showingOverlay = false;
-        console.log(error);
+        this.loading = false
+        this.showingOverlay = false
+        console.log(error)
         if (error.response.status != 500) {
-          this.errorMessage = error.response.data;
+          this.errorMessage = error.response.data
         }
       }
     },
     resetPassword: async function () {
-      if (!this.emailForgot) {
-        alert("email required");
-        return;
+      const mailformat = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
+      if (
+        !this.emailForgot ||
+        this.emailForgot.length > 50 ||
+        !this.emailForgot.match(mailformat)
+      ) {
+        alert("please enter an email and respect its format")
+        return
       }
       try {
-        this.loading = true;
-        this.showingOverlay = true;
+        this.loading = true
+        this.showingOverlay = true
         const result = await axios.post(
           serverUrl + "/api/users/reset-password",
           { email: this.emailForgot.toLowerCase(), toEmail: this.toEmail },
           { withCredentials: true }
-        );
-        this.loading = false;
-        this.showingOverlay = false;
+        )
+        this.loading = false
+        this.showingOverlay = false
         if (result.status == 200) {
-          this.showEmailSent();
+          this.showEmailSent()
         }
       } catch (error) {
-        console.log(error);
-        this.loading = false;
-        this.showingOverlay = false;
+        console.log(error)
+        this.loading = false
+        this.showingOverlay = false
       }
     },
     showEmailSent: function () {
-      this.hideForgotPassword();
-      this.emailSent = true;
+      this.hideForgotPassword()
+      this.emailSent = true
+    },
+    showEmailTokenSent: function () {
+      this.emailTokenSent = true
+    },
+    async getToken() {
+      const mailformat = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
+
+      if (
+        !this.emailToken ||
+        this.emailToken.length > 50 ||
+        !this.emailToken.match(mailformat)
+      ) {
+        alert("please enter an email and respect its format")
+        return
+      }
+      try {
+        this.loading = true
+        this.showingOverlay = true
+        const result = await axios.post(serverUrl + "/auth/genreatetoken", {
+          email: this.emailToken.toLowerCase(),
+        })
+        this.loading = false
+        this.showingOverlay = false
+        if (result.status == 200) {
+          this.showEmailTokenSent()
+        }
+      } catch (error) {
+        console.log(error)
+        this.loading = false
+        this.showingOverlay = false
+      }
     },
   },
-  // async beforeRouteEnter(to, from, next) {
-  //   // called before the route that renders this component is confirmed.
-  //   // does NOT have access to `this` component instance,
-  //   // because it has not been created yet when this guard is called!
-  //   console.log(to, from, next);
-  //   try {
-  //     const response = await axios.get(serverUrl + "/auth/checkUser/", {
-  //       withCredentials: true,
-  //     });
-  //     next((vm) => {
-  //       // access to component instance via `vm`
-  //       vm.$store.commit("setUser", response.data);
-  //       //save user data
-  //       vm.$router.replace("/");
-  //     });
-  //     // const response = await axios.get(
-  //     //   serverUrl + "/api/books/" + this.user.bookId
-  //     // );
-  //     // this.hasCover = response.data.hasCover;
 
-  //     // if (!this.user.hasSeenTips) {
-  //     //   this.isOverlayShown = true;
-  //     // }
-  //     //
-  //   } catch (error) {
-  //     console.log(error);
-  //     next((vm) => {
-  //       // access to component instance via `vm`
-  //       vm.routerReady = true;
-  //     });
-  //   }
-  // },
   async created() {
-    let params = new URLSearchParams(document.location.search);
-    this.toEmail = params.get("to-email");
-    if (this.toEmail) {
-      this.toEmail.toString();
+    let params
+    if (!document.location.search && this.$router.history._startLocation) {
+      params = new URLSearchParams(this.$router.history._startLocation)
+    } else {
+      params = new URLSearchParams(document.location.search)
     }
-    console.log(this.toEmail);
+    this.tokenSh = params.get("plk")
+    this.orderId = params.get("order-id")
+    this.isBuyer = params.get("is-buyer")
+    this.questionId = params.get("question-id")
+    this.chapterId = params.get("chapter-id")
+    if (this.isBuyer) {
+      this.isBuyer.toString()
+    }
+    if (this.orderId) {
+      this.orderId.toString()
+      this.login()
+    }
+    if (this.tokenSh) {
+      console.log(this.tokenSh)
+      this.tokenSh.toString()
+      this.login()
+    }
+    if (this.questionId) {
+      this.questionId.toString()
+      this.chapterId.toString()
+    }
   },
-};
+}
 </script>
 
 <style scoped>
-.login-btn {
-  background: #14473c;
+.login-btn,
+.get-token-btn {
   padding: 20px 43px;
-  color: white;
-  border: none;
-  border-radius: 0px;
-  font-size: 16px;
   width: 100%;
   font-family: PT-serif;
   font-weight: bold;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid rgba(6, 42, 32, 0.2);
+  border-radius: 50px;
+  cursor: pointer;
+  align-items: center;
+  text-transform: uppercase;
+}
+.get-token-btn:hover {
+  background: #14473c;
+  color: #ffffff;
+}
+.get-token-btn {
+  color: #14473c;
+  background: #ffffff;
+}
+.login-btn {
+  background: #14473c;
+  color: #ffffff;
+}
+.login-btn:hover {
+  color: #14473c;
+  background: #ffffff;
 }
 .register-input {
   padding: 15px 20px 18px 20px;
@@ -321,8 +435,35 @@ export default {
   height: 62px;
   width: 100%;
   box-sizing: border-box;
+  background: transparent;
 }
-
+.login-token-container {
+  margin-top: 200px;
+  padding: 50px 30px;
+  background: white;
+  text-align: center;
+  border: solid 1px rgba(6, 42, 32, 0.2);
+  border-radius: 15px;
+}
+.email-token-sent-info {
+  font-family: galaxie-polaris;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 21px;
+  color: rgba(6, 42, 32, 0.7);
+  display: inline-block;
+}
+.email-token-sent-title {
+  font-family: "PT Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 44px;
+  text-align: center;
+  color: #062a20;
+  margin-bottom: 15px;
+}
 .register-input:focus {
   border: 1px solid rgba(6, 42, 32, 0.35);
 }
@@ -352,15 +493,26 @@ export default {
   max-width: 100%;
 }
 .form-title-container {
-  font-family: galaxie-polaris;
-  font-weight: 500;
-  font-size: 24px;
+  font-family: PT-serif;
+  font-weight: 700;
+  font-size: 34px;
   text-align: center;
   width: 100%;
   margin-bottom: 27px;
+  line-height: 44px;
   color: #062a20;
 }
-
+.form-subtitle-container {
+  font-family: "Polaris";
+  font-style: normal;
+  font-weight: 680;
+  font-size: 16px;
+  line-height: 24px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #14473c;
+}
 .register-form-section {
   text-align: center;
   margin-bottom: 8px;
@@ -436,9 +588,9 @@ export default {
   color: #14473c;
   display: inline-block;
 }
-
 .logo-container {
   margin-top: 12px;
+  text-align: center;
 }
 .email-sent-image {
   max-width: 395px;
@@ -451,12 +603,17 @@ export default {
     background: none;
   }
   .route-section {
-    background: white;
+    overflow: scroll;
     padding: 24px;
+  }
+  .login-token-container {
+    background: transparent;
+    border: none;
   }
   .register-form-container {
     padding: 0px;
     border: none;
+    background: transparent;
   }
   .logo-container {
     margin-top: 44px;
@@ -469,6 +626,12 @@ export default {
   .email-sent-image {
     max-width: 198px;
     max-height: 125px;
+  }
+  .get-token-btn {
+    background: transparent;
+  }
+  .login-btn:hover {
+    background: transparent;
   }
 }
 

@@ -53,17 +53,208 @@
     <navbar></navbar>
 
     <div class="container">
-      <div class="route-section" style="">
-        <div class="route-title-container">
-          <span class="route-title">Printing</span>
-        </div>
-        <div class="print-section-container d-flex-centered">
-          <div class="main-section-container">
-            <div class="left-side-print">
-              <img src="/cover-style1.png" class="print-image" />
+      <div class="d-flex-centered d-col route-section" style="">
+        <h1 style="font-size: 24px; width: 100%" class="mobile title-section">
+          Print
+        </h1>
+        <div class="print-section-container d-col" v-show="step == 1">
+          <div
+            class="d-row"
+            style="
+              justify-content: space-between;
+              margin-bottom: 10px;
+              font-size: 12px;
+              line-height: 18px;
+            "
+          >
+            <div class="ptr" style="color: #e1504b" @click="step = 1">
+              Shipping
             </div>
+            <div
+              class="ptr"
+              style="color: rgba(6, 42, 32, 0.7)"
+              @click="goToNextStep()"
+            >
+              Confirmation
+            </div>
+          </div>
+          <div class="d-row" style="width: 100%; margin-bottom: 10px">
+            <div
+              class="ptr"
+              style="
+                width: 50%;
+                height: 3px;
+                background: #e1504b;
 
+                position: relative;
+              "
+              @click="step = 1"
+            ></div>
+            <div
+              class="ptr"
+              style="
+                width: 50%;
+                height: 3px;
+                background: #e5e9e8;
+
+                position: relative;
+              "
+              @click="goToNextStep()"
+            ></div>
+          </div>
+          <div class="form-title-container">
+            <span style="text-align: center">SHIPPING ADDRESS</span>
+          </div>
+          <div style="margin-bottom: 10px">
+            <span>Your account include {{ this.quantity }} book. </span>
+          </div>
+          <div class="print-form-section error-msg-container">
+            <span class="print-form-error" v-if="errorMessage1">{{
+              errorMessage1
+            }}</span>
+          </div>
+          <div class="print-form-section error-msg-container">
+            <span class="print-form-success" v-if="successSaved">
+              Your adress has been successfully saved
+            </span>
+          </div>
+          <div class="print-form-section">
+            <input
+              type="text"
+              placeholder="Name"
+              v-model="adressName"
+              class="print-input"
+              :class="{ 'form-input-error': nameError }"
+              ref="nameInput"
+              @keypress.enter="validateStep1()"
+            />
+          </div>
+          <div class="print-form-section">
+            <input
+              type="text"
+              placeholder="Address line 1"
+              v-model="streetLine1"
+              class="print-input"
+              :class="{ 'form-input-error': streetError }"
+              ref="streetInput"
+              @keypress.enter="validateStep1()"
+            />
+          </div>
+          <div class="print-form-section">
+            <select
+              class="print-input"
+              :class="{ 'form-input-error': countryError }"
+              v-model="country"
+              ref="countryInput"
+            >
+              <option
+                class="rounded-full"
+                value="country"
+                disabled
+                selected="selected"
+              >
+                Country
+              </option>
+              <option value="usa">United States</option>
+              <option value="ca">Canada</option>
+              <option value="uk">UK</option>
+              <option value="nz">New Zealand</option>
+              <option value="aus">Australia</option>
+            </select>
+          </div>
+          <div class="print-form-section">
+            <input
+              type="text"
+              placeholder="City"
+              v-model="city"
+              class="print-input"
+              :class="{ 'form-input-error': cityError }"
+              ref="cityInput"
+              @keypress.enter="validateStep1()"
+            />
+          </div>
+          <div class="print-form-section">
+            <input
+              type="text"
+              placeholder="State"
+              v-model="state"
+              class="print-input"
+              ref="stateInput"
+              @keypress.enter="validateStep1()"
+            />
+          </div>
+          <div class="print-form-section">
+            <input
+              type="number"
+              placeholder="Zip code"
+              v-model="zipCode"
+              class="print-input"
+              :class="{ 'form-input-error': zipCodeError }"
+              ref="zipCodeInput"
+              @keypress.enter="validateStep1()"
+            />
+          </div>
+          <div class="print-form-section spaced d-row d-flex-centered">
+            <button
+              @click="goToNextStep()"
+              style="background-color: #e1504b; margin-right: 10px"
+              class="login-btn"
+            >
+              NEXT
+            </button>
+            <button @click="saveShippingAdress()" class="login-btn">
+              SAVE
+            </button>
+          </div>
+        </div>
+        <div class="d-col print-form-container" v-show="step == 2">
+          <div
+            class="d-row"
+            style="
+              justify-content: space-between;
+              margin-bottom: 10px;
+              font-size: 12px;
+              line-height: 18px;
+            "
+          >
+            <div
+              class="ptr"
+              style="color: rgba(6, 42, 32, 0.7)"
+              @click="goToPrviewsStep()"
+            >
+              Shipping
+            </div>
+            <div class="ptr" style="color: #e1504b" @click="step = 2">
+              Confirmation
+            </div>
+          </div>
+          <div class="d-row" style="width: 100%; margin-bottom: 10px">
+            <div
+              class="ptr"
+              style="
+                width: 50%;
+                height: 3px;
+                background: #e5e9e8;
+                position: relative;
+              "
+              @click="goToPrviewsStep()"
+            ></div>
+            <div
+              class="ptr"
+              style="
+                width: 50%;
+                height: 3px;
+                background: #e1504b;
+                position: relative;
+              "
+              @click="step = 2"
+            ></div>
+          </div>
+          <div class="main-section-container" style="text-align: center">
             <div class="right-side-print">
+              <div class="form-title-container">
+                <span style="text-align: center">CONFIRM PRINTING</span>
+              </div>
               <div class="print-confirm-btn-mobile">
                 <button
                   class="confirm-impression-btn ptr"
@@ -110,6 +301,12 @@
                 >
                   CONFIRM PRINTING
                 </button>
+                <button
+                  class="back-impression-btn ptr"
+                  @click="goToPrviewsStep()"
+                >
+                  BACK
+                </button>
               </div>
             </div>
           </div>
@@ -119,11 +316,10 @@
   </div>
 </template>
 
-
 <script>
-import navbar from "../components/navbar.vue";
-import axios from "axios";
-import { serverUrl } from "../severUrl";
+import navbar from "../components/navbar.vue"
+import axios from "axios"
+import { serverUrl } from "../severUrl"
 
 export default {
   components: {
@@ -141,96 +337,242 @@ export default {
       errorPrint: false,
       errorReason: "",
       errorParagraph: "",
-    };
+      currentCoverIndex: "1",
+      step: 1,
+      country: "",
+      adressName: "",
+      streetLine1: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      nameError: false,
+      streetError: false,
+      countryError: false,
+      cityError: false,
+      zipCodeError: false,
+      errorMessage1: "",
+      adressSaved: false,
+      successSaved: false,
+      quantity: "",
+    }
   },
   methods: {
+    validateStep1: function () {
+      this.nameError = ""
+      this.streetError = false
+      this.countryError = false
+      this.cityError = false
+      this.zipCodeError = false
+      this.successSaved = false
+      this.errorMessage1 = ""
+      console.log("this.adressName", this.adressName)
+      if (this.adressName === "" || !this.adressName) {
+        this.nameError = true
+        this.$refs.nameInput.focus()
+        this.errorMessage1 = "Adress name is required"
+        this.step = 1
+        return false
+      }
+      if (this.streetLine1 === "" || !this.streetLine1) {
+        this.streetError = true
+        this.$refs.streetInput.focus()
+        this.errorMessage1 = "Adress line 1 is required"
+        this.step = 1
+        return false
+      }
+      if (this.country === "" || this.country === "country" || !this.country) {
+        this.countryError = true
+        this.$refs.countryInput.focus()
+        this.errorMessage1 = "Country is required"
+        this.step = 1
+        return false
+      }
+      if (this.city === "" || !this.city) {
+        this.cityError = true
+        this.$refs.cityInput.focus()
+        this.errorMessage1 = "City is required"
+        this.step = 1
+        return false
+      }
+      if (this.zipCode === "" || !this.zipCode) {
+        this.zipCodeError = true
+        this.$refs.zipCodeInput.focus()
+        this.errorMessage1 = "Zip Code is required"
+        this.step = 1
+        return false
+      }
+
+      return true
+    },
+    goToNextStep: function () {
+      if (this.validateStep1() && this.adressSaved) {
+        if (
+          this.city !== this.user?.city ||
+          this.adressName !== this.user?.adressName ||
+          this.country !== this.user?.country ||
+          this.state !== this.user?.state ||
+          this.zipCode !== this.user?.zipCode ||
+          this.streetLine1 !== this.user?.streetLine1
+        ) {
+          this.errorMessage1 =
+            "You should save your adress before proceeding to the next step"
+          this.step = 1
+          return false
+        } else {
+          this.errorMessage1 = ""
+          this.successSaved = false
+          this.step = 2
+        }
+      } else {
+        this.errorMessage1 =
+          "You should save your adress before proceeding to the next step"
+        this.step = 1
+        return false
+      }
+    },
+    goToPrviewsStep: function () {
+      this.step = 1
+    },
+    saveShippingAdress: async function () {
+      const isvalid = this.validateStep1()
+      console.log("test", isvalid)
+      try {
+        if (isvalid) {
+          this.errorMessage1 = ""
+          this.successSaved = false
+          this.user.updateBoth = true
+          this.user.adressName = this.adressName
+          this.user.country = this.country
+          this.user.streetLine1 = this.streetLine1
+          this.user.city = this.city
+          this.user.state = this.state
+          this.user.zipCode = this.zipCode
+          this.loading = true
+          this.showingOverlay = true
+          const response = await axios.put(
+            serverUrl + "/api/users/",
+            this.user,
+            {
+              withCredentials: true,
+            }
+          )
+          if (response.status == 200) {
+            const userString = JSON.stringify(this.user)
+            localStorage.setItem("user", userString)
+            this.adressSaved = true
+            this.loading = false
+            this.showingOverlay = false
+            this.successSaved = true
+          }
+        }
+      } catch (error) {
+        console.log(error)
+        this.loading = false
+        this.showingOverlay = false
+        this.adressSaved = false
+        this.successSaved = false
+      }
+    },
     doSmth: function () {
-      console.log(this.book);
+      console.log(this.book)
     },
     startConfirmingPrint: function () {
-      this.confirmingPrint = true;
-      this.showingOverlay = true;
+      this.confirmingPrint = true
+      this.showingOverlay = true
     },
     cancelPrint: function () {
-      this.confirmingPrint = false;
-      this.showingOverlay = false;
+      this.confirmingPrint = false
+      this.showingOverlay = false
     },
     confirmPrint: async function () {
       try {
-        this.confirmingPrint = false;
-        this.loading = true;
-        this.showingOverlay = true;
+        this.confirmingPrint = false
+        this.loading = true
+        this.showingOverlay = true
 
         const response = await axios.get(
           serverUrl + "/api/users/confirm-print/" + this.user._id,
           { withCredentials: true }
-        );
+        )
         if (response.status == 200) {
-          this.user.printStatus = "pending";
-          this.loading = false;
-          this.showingOverlay = false;
+          this.user.printStatus = "pending"
+          this.loading = false
+          this.showingOverlay = false
         }
       } catch (error) {
-        console.log(error);
-        this.loading = false;
-        this.showingOverlay = false;
+        console.log(error)
+        this.loading = false
+        this.showingOverlay = false
         if (error.response.status == 400) {
-          console.log(error.response.data);
-          this.showingOverlay = true;
-          this.errorPrint = true;
-          this.errorReason = error.response.data.reason;
-          this.errorParagraph = error.response.data.paragraph;
+          console.log(error.response.data)
+          this.showingOverlay = true
+          this.errorPrint = true
+          this.errorReason = error.response.data.reason
+          this.errorParagraph = error.response.data.paragraph
         }
       }
     },
     hideErrorPanel: function () {
-      this.errorPrint = false;
-      this.showingOverlay = false;
-      this.errorReason = "";
-      this.errorParagraph = "";
+      this.errorPrint = false
+      this.showingOverlay = false
+      this.errorReason = ""
+      this.errorParagraph = ""
     },
   },
   async mounted() {
     try {
       if (this.user) {
-        this.showingOverlay = true;
-        this.loading = true;
+        this.showingOverlay = true
+        this.loading = true
         const result = await axios.get(
           serverUrl + "/api/books/stats/" + this.user.bookId,
           { withCredentials: true }
-        );
+        )
         if (result.data.pagesCount % 2 == 1) {
-          this.pagesCount = result.data.pagesCount + 1;
+          this.pagesCount = result.data.pagesCount + 1
         } else {
-          this.pagesCount = result.data.pagesCount;
+          this.pagesCount = result.data.pagesCount
         }
-        this.imagesCount = result.data.imagesCount;
-        this.storiesCount = result.data.storiesCount;
-        this.showingOverlay = false;
-        this.loading = false;
+        this.imagesCount = result.data.imagesCount
+        this.storiesCount = result.data.storiesCount
+        this.showingOverlay = false
+        this.loading = false
       }
     } catch (error) {
-      console.log(error);
+      console.log(error)
     }
   },
   computed: {
     user: function () {
-      return this.$store.getters.getUser;
+      return this.$store.getters.getUser
     },
   },
-};
+  created() {
+    this.adressName = this.user?.adressName
+    this.country = this.user?.country ? this.user?.country : "country"
+    this.streetLine1 = this.user?.streetLine1
+    this.city = this.user?.city
+    this.state = this.user?.state
+    this.zipCode = this.user?.zipCode
+    this.quantity = this?.user?.quantity ? this?.user?.quantity : 1
+    if (this.user?.streetLine1) {
+      this.adressSaved = true
+    }
+  },
+}
 </script>
 
 <style>
 .main-section-container {
-  padding: 70px;
+  padding: 40px;
   background: #ffffff;
-  border: 1px solid rgba(6, 42, 32, 0.2);
   box-sizing: border-box;
   border-radius: 22px;
   display: flex;
 }
-
+.route-section {
+  overflow: scroll;
+}
 .confirm-impression-btn {
   background: #e1504b;
   width: 100%;
@@ -246,6 +588,21 @@ export default {
 
   /* white/white */
   color: #ffffff;
+}
+.back-impression-btn {
+  margin-top: 10px;
+  background: #fff;
+  color: #000;
+  border: 1px solid #000;
+  width: 100%;
+  padding: 20px 0px;
+  font-family: PT-serif;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 21px;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .confirm-impression-btn.disabled {
@@ -278,7 +635,9 @@ export default {
   line-height: 24px;
   color: #062a20;
 }
-
+.form-input-error:focus {
+  border: 2px solid #eb4848;
+}
 .print-image {
   height: 324px;
   width: 213px;
@@ -296,12 +655,100 @@ export default {
 }
 
 .print-section-container {
-  height: 100%;
+  padding: 70px;
+  background: #ffffff;
+  border: 1px solid rgba(6, 42, 32, 0.2);
+  border-radius: 22px;
+  margin-top: 44px;
+  box-sizing: border-box;
+  width: 468px;
+  max-width: 100%;
 }
-
+.print-input {
+  padding: 15px 20px 18px 20px;
+  font-size: 16px;
+  line-height: 24px;
+  border: 1px solid rgba(6, 42, 32, 0.2);
+  font-family: galaxie-polaris;
+  outline: none;
+  color: #14473c;
+  height: 62px;
+  width: 100%;
+  box-sizing: border-box;
+}
+select.print-input {
+  display: block;
+  font-size: 1em;
+  /* padding: 0.8rem 0.5rem; */
+  font-family: inherit;
+  appearance: none;
+  background-image: url("../assets/arrow-down.png");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.9em;
+}
+.print-input:focus {
+  border: 1px solid rgba(6, 42, 32, 0.35);
+}
+.print-input::placeholder {
+  color: rgba(6, 42, 32, 0.4);
+}
+.print-form-container {
+  padding: 70px;
+  background: #ffffff;
+  border: 1px solid rgba(6, 42, 32, 0.2);
+  border-radius: 22px;
+  margin-top: 44px;
+  box-sizing: border-box;
+  width: 468px;
+  max-width: 100%;
+}
+.form-title-container {
+  font-family: galaxie-polaris;
+  font-weight: 500;
+  font-size: 24px;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 20px;
+  margin-top: 15px;
+  color: #062a20;
+}
+.print-form-section {
+  text-align: center;
+  margin-bottom: 8px;
+  width: 100%;
+  position: relative;
+}
+.login-btn {
+  background: #14473c;
+  padding: 20px 43px;
+  color: white;
+  border: none;
+  border-radius: 0px;
+  font-size: 16px;
+  width: 100%;
+  font-family: PT-serif;
+  font-weight: bold;
+  cursor: pointer;
+}
+.print-form-error {
+  color: #eb4848;
+  font-size: 14px;
+}
+.print-form-success {
+  color: #44ba12;
+  font-size: 14px;
+}
 @media screen and (max-width: 1024px) {
   .print-section-container {
-    height: auto;
+    padding: 0px;
+    border: none;
+    margin-top: 50px;
+    background: transparent;
+  }
+  .route-section {
+    overflow: scroll;
+    padding: 24px;
   }
   .main-section-container {
     padding: 30px 20px;

@@ -7,28 +7,25 @@
         style="justify-content: center"
       >
         <div class="welcome-content-container d-col">
-          <div style="margin-bottom: 28px">
-            <img :src="'/' + user.avatar" height="44px" width="44px" alt="" />
-          </div>
+          <div style="margin-bottom: 28px"></div>
 
           <div style="margin-bottom: 32px">
-            <span class="welcome-title-text"> Welcome {{ user.name }},</span>
+            <span class="welcome-title-text">
+              Your gift is ready for {{ user.recipLName }}
+              {{ user.recipFName }} ,</span
+            >
           </div>
           <div style="margin-bottom: 50px; text-align: center">
             <span class="welcome-paragraph-text">
-              We wish you a pleasant writing session.</span
+              You can now customize the questions for {{ user.recipLName }}
+              {{ user.recipFName }}. But first, we invite you to watch a quick
+              tutorial!</span
             >
           </div>
           <div style="margin-bottom: 18px; width: 200px">
             <button class="confirm-impression-btn ptr" @click="startEditing()">
-              START
+              TUTORIAL
             </button>
-          </div>
-          <div style="text-align: center" class="d-col">
-            <span class="welcome-tutorial-text">
-              Want to see the tutorial?
-            </span>
-            <span class="welcome-tutorial-link" style="">Click here</span>
           </div>
         </div>
       </div>

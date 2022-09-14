@@ -1,22 +1,13 @@
 <template>
   <div class="d-row site-background">
     <navbar></navbar>
-    <div class="container">
+    <div class="container" style="height: 100%">
       <div class="route-section d-col preview">
         <div class="route-title-container">
-          <span class="route-title">Review content</span>
+          <span class="route-title title-section">Review content</span>
         </div>
         <div class="preview-container">
           <div class="d-flex-centered" style="height: 100%">
-            <!-- <iframe
-              :src="pdfFile"
-              frameborder="0"
-              height="600"
-              width="953"
-              style="margin: 0 auto"
-              v-if="pdfFile"
-            ></iframe> -->
-            <!-- <div id="testPdf"></div> -->
             <pdf v-if="pdfFile"></pdf>
             <div
               v-if="!pdfFile"
@@ -165,6 +156,9 @@ export default {
   }
   .site-background.preview {
     height: calc(100vh - calc(100vh - 100%));
+  }
+  .route-title-container {
+    margin-top: 0px;
   }
 }
 </style>

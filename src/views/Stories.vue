@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="d-row site-background"
-    :class="{ hidebuttonmobilemenu: !displaymenubutton }"
-  >
+  <div class="d-row site-background">
     <div class="overlay" v-if="showingOverlay">
       <div class="pop-up d-flex-centered d-col" v-if="isDeletingStory">
         <div class="pop-up-title">
@@ -17,50 +14,6 @@
         <div class="pop-up-buttons-container">
           <button class="pop-up-btn confirm" @click="deleteStory()">YES</button>
           <button class="pop-up-btn" @click="cancelDeletingStory()">NO</button>
-        </div>
-      </div>
-      <div v-if="loading">
-        <div class="lds-dual-ring"></div>
-      </div>
-    </div>
-    <div class="overlay mobile" v-if="showingaddQuestionOverlay">
-      <div class="pop-up d-flex-centered d-col" v-if="isAddingNewQuestion">
-        <div class="pop-up-title" style="font-size: 18px; margin-bottom: 8px">
-          <span>Add your own question</span>
-        </div>
-        <div class="pop-up-paragraph" style="width: 100%; margin-bottom: 8px">
-          <textarea
-            rows="4"
-            style="box-sizing: border-box"
-            class="question-title-textarea"
-            v-model="tempQuestionTitle"
-            placeholder="Enter your new question"
-            ref="newQuestionInputMobile"
-          />
-        </div>
-        <div class="pop-up-buttons-container">
-          <button
-            class="pop-up-btn confirm"
-            @click="confirmNewStory()"
-            style="
-              border-radius: 60px;
-              padding: 13px 44px;
-              text-transform: uppercase;
-            "
-          >
-            Add new question
-          </button>
-          <button
-            class="pop-up-btn"
-            @click="cancelNewStory()"
-            style="
-              border-radius: 60px;
-              padding: 13px 44px;
-              text-transform: uppercase;
-            "
-          >
-            Cancel
-          </button>
         </div>
       </div>
       <div v-if="loading">
@@ -172,149 +125,54 @@
           @dragover="dropFix($event)"
         ></div>
         <!-- chapters section -->
-        <div v-if="showingChapters" ref="chapters_section_container_scrollable">
+        <div
+          v-if="showingChapters"
+          ref="chapters_section_container_scrollable"
+          @scroll="updateDragArrowState()"
+        >
           <div class="route-title-container">
-            <span class="route-title">Questions</span>
+            <span class="route-title title-section">Stories</span>
           </div>
         </div>
+        <h1 v-if="!showingForm" class="desktop title-section">Stories</h1>
+        <h1 class="mobile title-section">Stories</h1>
         <!-- stories section -->
-        <h1 v-if="!showingForm" class="desktop title-section">Questions</h1>
-        <h1 class="mobile title-section">Questions</h1>
 
         <div
           v-if="showingStories"
-          class="questions-section-container"
+          class="questions-section-container scrollable"
           ref="questions_section_container_scrollable"
           style=""
+          @scroll="updateDragArrowState()"
         >
-          <div class="questions-section-container-header">
-            <div
-              class="d-row"
-              style="justify-content: space-between; padding-right: 7px"
-            >
-              <div class="d-row tab-btn-row tab-mobile">
-                <button
-                  class="tab-btn"
-                  :class="{
-                    active: !pastQuestion,
-                  }"
-                  @click="
-                    selectedChapter.isShowingAnswered = false
-                    selectedPaginationIndex = 1
-                    pastQuestion = false
-                  "
-                >
-                  Upcoming questions
-                </button>
-                <button
-                  class="tab-btn"
-                  :class="{
-                    active: pastQuestion,
-                  }"
-                  @click="
-                    pastQuestion = true
-                    cancelNewStory()
-                  "
-                >
-                  Past questions
-                </button>
-              </div>
-              <div class="d-row search-secion">
-                <div class="d-flex-centered" style="height: 30px">
-                  <input
-                    :class="{ hidden: !filteringStories }"
-                    type="text"
-                    v-model="storiesFilterText"
-                    @input="filterStories()"
-                    class="question-search-input"
-                    placeholder="Search questions..."
-                  />
-                  <img
-                    @click="toggleFiltering()"
-                    class="ptr"
-                    src="../assets/search.svg"
-                    alt=""
-                    height="16px"
-                    width="16px"
-                  />
-                </div>
-              </div>
-            </div>
+          <div style="margin-top: 30px">
             <div class="questions-container" @dragover="dropFix($event)">
-              <!-- add question section -->
-              <div
-                v-if="
-                  !isAddingQuestion &&
-                  !selectedChapter.isShowingAnswered &&
-                  !pastQuestion
-                "
-                class="add-question-container d-flex-centered ptr"
-                style=""
-                @click="startAddingStory()"
-              >
-                <div class="">
-                  <img src="../assets/union.svg" alt="" class="plus-sign" />
-                </div>
-                <div class="add-question-text">Add a question...</div>
-              </div>
+              <!-- search section -->
               <div
                 class="empty-section"
-                v-if="selectedQuestionSent == 0 && pastQuestion"
+                v-if="selectedChapterAnsweredCount == 0"
                 style=""
               >
-                <div class="empty-story-message">
-                  Questions that have already been emailed, but not answered,<br />will
-                  be displayed here.
+                <div class="empty-story-message" v-if="user.isBuyer == 0">
+                  Your stories will be saved here once <br />you create a first
+                  entry.
+                </div>
+                <div v-else class="empty-story-message">
+                  The Storyteller stories will be saved <br />
+                  here once there is a first entry.
+                </div>
+                <div class="empty-story-sub-message">
+                  You'll be able to read and edit <br />
+                  them, anytime you want.
                 </div>
               </div>
 
-              <!-- adding question section -->
-              <div
-                v-if="isAddingQuestion && !selectedChapter.isShowingAnswered"
-                class="d-row question-head adding-question desktop"
-                style="border: 1px solid #e1504b"
-              >
-                <div class="d-row" style="flex-grow: 1; margin-right: 8px">
-                  <input
-                    rows="1"
-                    style="height: 27px; box-sizing: border-box"
-                    class="question-title-input desktop"
-                    v-model="tempQuestionTitle"
-                    placeholder="Type your question here..."
-                    @keypress.enter="confirmNewStory()"
-                    ref="newQuestionInput"
-                  />
-                </div>
-                <div class="d-row editing-buttons-container">
-                  <div
-                    class="question-control ptr"
-                    @click="confirmNewStory()"
-                    style="margin-right: 12px"
-                  >
-                    <img
-                      src="../assets/confirm.svg"
-                      alt=""
-                      height="36px"
-                      width="36px"
-                      class="question-control"
-                    />
-                  </div>
-                  <div class="question-control ptr" @click="cancelNewStory()">
-                    <img
-                      src="../assets/cancel.svg"
-                      alt=""
-                      height="36px"
-                      width="36px"
-                      class="question-control"
-                    />
-                  </div>
-                </div>
-              </div>
               <div>
                 <draggable
                   @start="startDraggingQuestion"
                   @end="stopDraggingQuestion"
                   :move="switchPlacesQuestion"
+                  element="span"
                   :list="paginationInterval"
                   delay-on-touch-only="true"
                   delay="100"
@@ -322,14 +180,11 @@
                   <div
                     v-for="(keyStories, indexQuestion) in paginationInterval"
                     :key="indexQuestion"
-                    id="infinite-list"
                   >
                     <div
                       v-if="
-                        (pastQuestion &&
-                          selectedChapter.stories[keyStories].notifSent) ||
-                        (!pastQuestion &&
-                          !selectedChapter.stories[keyStories].notifSent)
+                        selectedChapter.isShowingAnswered &&
+                        selectedChapter.stories[keyStories].isAnswered
                       "
                       class="question-head"
                       :class="{
@@ -338,7 +193,7 @@
                       @click="showStoryForm($event, keyStories)"
                     >
                       <div
-                        v-if="!pastQuestion"
+                        v-if="selectedChapter.stories[keyStories].isAnswered"
                         class="drag-container question-control"
                       ></div>
                       <div
@@ -346,13 +201,6 @@
                         style="flex-grow: 1; margin-right: 8px"
                       >
                         <div style="width: 100%">
-                          <div
-                            class="sent-date"
-                            v-if="displayDate && !pastQuestion"
-                          >
-                            {{ selectedChapter.stories[keyStories].sentDate }}
-                          </div>
-
                           <span
                             class="question-title"
                             v-if="
@@ -380,7 +228,6 @@
                             @keypress.enter="confirmEditingStory(keyStories)"
                           />
                           <div
-                            style="z-index: 10"
                             class="
                               question-control
                               mobile
@@ -482,6 +329,76 @@
                 </draggable>
               </div>
             </div>
+            <div class="pagination-section" v-if="paginationsCount > 1">
+              <div
+                @click="decrementPagination()"
+                class="ptr"
+                style="margin-right: 12px"
+              >
+                <button
+                  :disabled="selectedPaginationIndex == 1"
+                  class="pagination-btn"
+                  :class="{ disabled: selectedPaginationIndex == 1 }"
+                >
+                  &lt;
+                </button>
+              </div>
+
+              <div class="d-row" style="align-items: baseline">
+                <div style="margin-right: 12px">
+                  <span
+                    style="
+                      color: rgba(6, 42, 32, 0.4);
+                      font-family: galaxie-polaris;
+                      font-size: 14px;
+                    "
+                    >page</span
+                  >
+                </div>
+
+                <div class="d-row" style="margin-right: 12px">
+                  <input
+                    type="number"
+                    min="1"
+                    :max="paginationsCount"
+                    v-model="tempSelectedPaginationIndex"
+                    @input="validatePagination()"
+                    @keypress.enter="changePagination()"
+                    class="pagination-input"
+                    ref="pagination-input"
+                  />
+                  <button @click="changePagination()" class="pagination-submit">
+                    Go
+                  </button>
+                </div>
+                <div
+                  style="
+                    margin-right: 12px;
+                    font-family: galaxie-polaris;
+                    font-size: 14px;
+                  "
+                >
+                  <span style="color: rgba(6, 42, 32, 0.4)"
+                    >of {{ paginationsCount }}</span
+                  >
+                </div>
+              </div>
+
+              <div
+                class="pagination-icon-container ptr"
+                @click="incrementPagination()"
+              >
+                <button
+                  :disabled="selectedPaginationIndex == paginationsCount"
+                  :class="{
+                    disabled: selectedPaginationIndex == paginationsCount,
+                  }"
+                  class="pagination-btn"
+                >
+                  &gt;
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         <!-- form section -->
@@ -500,12 +417,12 @@
                 />
               </div>
               <div style="margin-left: 18px">
-                <span class="route-title form-question">Back</span>
+                <span class="route-title form-question">Go Back</span>
               </div>
             </div>
             <div class="d-row" style="align-items: center">
               <div style="margin-right: 18px">
-                <span class="route-title form-question">Next</span>
+                <span class="route-title form-question">Next Story</span>
               </div>
               <div
                 @click="
@@ -679,7 +596,10 @@
                         display: inline-block;
                         max-width: 90%;
                       "
-                      >{{ selectedStory.imageFileName.substr(0, 30)
+                      >{{
+                        selectedStory.imageFileName
+                          ? selectedStory.imageFileName.substr(0, 30)
+                          : "picture"
                       }}<span v-if="selectedStory.imageFileName.length > 30"
                         >...</span
                       >
@@ -711,6 +631,7 @@
                 </div>
               </div>
             </div>
+
             <div class="form-submit-container d-row d-flex-spaced">
               <div class="d-flex-centered save-state-container">
                 <div style="margin-right: 15px" v-if="loadingForm">
@@ -778,19 +699,8 @@ import axios from "axios"
 import { serverUrl } from "../severUrl"
 import { calculateStoryPages } from "../pdfUtils"
 import navbar from "../components/navbar.vue"
-import dayjs from "dayjs"
-import isToday from "dayjs/plugin/isToday"
-import infiniteScroll from "vue-infinite-scroll"
-import Vue from "vue"
-import VueMobileDetection from "vue-mobile-detection"
-import Vue2TouchEvents from "vue2-touch-events"
 import draggable from "vuedraggable"
 
-Vue.use(Vue2TouchEvents)
-
-Vue.use(VueMobileDetection)
-Vue.use(infiniteScroll)
-dayjs.extend(isToday)
 export default {
   components: {
     navbar,
@@ -815,7 +725,7 @@ export default {
       tempQuestionTitle: "",
       editingTitleIndex: -1,
       selectedChapterIndex: 0,
-      selectedChapter: {},
+      selectedChapter: null,
       backupStories: [],
       SelectedStoryIndex: 0,
       selectedStory: null,
@@ -839,39 +749,14 @@ export default {
       defaultQuestion: "",
       defaultChapter: "",
       questionID: "",
-      mailFrequence: 2,
-      lastQuestionsent: "",
-      displayDate: false,
-      firstDateTosend: "",
-      nextDateTosend: "",
-      pastQuestion: "",
-      busy: false,
-      showingaddQuestionOverlay: false,
-      firstDraggingIndexQuestion: "",
-      isAddingNewQuestion: false,
-      displaymenubutton: true,
-      showingEditQuestionOverlay: false,
-      isEditingNewQuestion: false,
       keyStoriesForEdit: 0,
-      delayedDragging: false,
-      listUpcomingQuestion: [],
-      ListPastQuestion: [],
+      isEditingNewQuestion: false,
+      showingEditQuestionOverlay: false,
       startDraggingStorie: {},
       finshDragginStorie: {},
     }
   },
   methods: {
-    loadMore: function ({ target: { scrollTop, clientHeight, scrollHeight } }) {
-      // this.displaymenubutton = scrollTop < 30
-      if (scrollTop + clientHeight + 55 >= scrollHeight) {
-        this.busy = true
-
-        if (this.selectedPaginationIndex < this.paginationsCount) {
-          this.selectedPaginationIndex = this.selectedPaginationIndex + 1
-          this.tempSelectedPaginationIndex = this.selectedPaginationIndex
-        }
-      }
-    },
     updateDragArrowState: function () {
       let containerRef = null
       if (this.showingStories) {
@@ -881,6 +766,7 @@ export default {
         containerRef = this.$refs.chapters_section_container_scrollable
       }
       if (!containerRef) {
+        console.log("ref is false")
         return false
       }
       const scrollTop = containerRef.scrollTop
@@ -912,9 +798,12 @@ export default {
         this.selectedChapter.stories[relatedContext?.index]
     },
     stopDraggingQuestion: async function () {
+      console.log("startStory", this.startDraggingStorie.order)
+      console.log("this.finshDragginStorie", this.finshDragginStorie.order)
+
       await axios
         .put(
-          serverUrl + "/api/chapters/update-question-order",
+          serverUrl + "/api/chapters/update-story-order",
           {
             chapterId: this.selectedChapter._id,
             startStory: this.startDraggingStorie._id,
@@ -962,7 +851,10 @@ export default {
           },
           { withCredentials: true }
         )
-        .then(() => {})
+        .then((res) => {
+          console.log(res.status)
+          console.log("updated order")
+        })
         .catch((err) => console.log(err))
       this.dragging = false
       this.draggingIndexChapters = -1
@@ -1179,7 +1071,6 @@ export default {
       }
     },
     selectChapter: async function (event, id, options) {
-      this.nextDateTosend = this.user.lastQuestionsent
       if (
         !(
           (event && event.target.classList.contains("chapter-control")) ||
@@ -1190,42 +1081,26 @@ export default {
         try {
           this.showingOverlay = true
           this.loading = true
+
           const result = await axios.get(
             serverUrl +
-              "/api/chapters/" +
-              this.chapters[0]?._id +
-              "?populated=stories",
+              "/api/chapters/?bkid=" +
+              this.user.bookId +
+              "&populated=stories&answered=true",
             { withCredentials: true }
           )
           if (result.status == 200) {
-            const chapter = result.data
+            let chapter = result.data?.chapters
+            chapter.stories = result.data?.stories
             chapter.tempTitle = ""
-            chapter.isShowingAnswered = false
-            chapter.stories.forEach((story, storyIndex) => {
-              if (!story.notifSent) {
-                if (storyIndex === 0) {
-                  story.sentDate = this.getNexDateQuestion(true)
-                } else {
-                  story.sentDate = this.getNexDateQuestion()
-                }
-              }
+            chapter.isShowingAnswered = true
 
-              story.editingTitle = false
-              story.tempTitle = ""
-              chapter.stories[storyIndex] = story
-            })
             this.selectedChapter = JSON.parse(JSON.stringify(chapter))
-            // SORT BY ORDER ATTRIBUTE
-            this.selectedChapter.stories = this.selectedChapter.stories?.filter(
-              (story) => !story.isAnswered
-            )
-            this.listUpcomingQuestion = this.selectedChapter.stories?.filter(
-              (story) => !story.notifSent && !story.isAnswered
-            )
-            this.ListPastQuestion = this.selectedChapter.stories?.filter(
-              (story) => story.notifSent && !story.isAnswered
-            )
+
+            //this.selectedChapter.stories = chapter.stories
+
             this.backupStories = this.selectedChapter.stories
+
             this.selectedChapterIndex = id
             this.showingOverlay = false
             this.loading = false
@@ -1242,10 +1117,9 @@ export default {
 
     //stories
     toggleHidingStandard: function () {
-      console.log(this.selectedChapter.isHidingStandardStories)
       this.selectedChapter.isHidingStandardStories =
         !this.selectedChapter.isHidingStandardStories
-      this.selectedPaginationIndex = 0
+      this.selectedPaginationIndex = 1
     },
     startEditingSelectedChapter: function () {
       this.selectedChapter.tempTitle = this.selectedChapter.title
@@ -1334,9 +1208,9 @@ export default {
             this.loading = false
             this.showingOverlay = false
           }
-          this.showingEditQuestionOverlay = false
-          this.isEditingNewQuestion = false
         }
+        this.showingEditQuestionOverlay = false
+        this.selectedChapter.stories[keyStories].editingTitle = false
       } catch (error) {
         this.showingEditQuestionOverlay = false
         this.loading = false
@@ -1349,72 +1223,6 @@ export default {
       this.selectedChapter.stories[keyStories].editingTitle = false
       this.showingEditQuestionOverlay = false
       this.isEditingNewQuestion = false
-    },
-    startAddingStory: function () {
-      this.selectedChapter?.stories?.forEach((question, index) => {
-        if (question?.editingTitle == true) {
-          this.confirmEditingStory(index)
-        }
-      })
-      this.isAddingNewQuestion = true
-      this.showingaddQuestionOverlay = true
-      this.isAddingQuestion = true
-      this.$nextTick(() => {
-        this.$refs.newQuestionInput.focus()
-      })
-    },
-    confirmNewStory: async function () {
-      try {
-        this.isAddingNewQuestion = false
-        this.loading = true
-        this.showingOverlay = true
-
-        const newStory = {
-          bookId: this.book._id,
-          chapterId: this.selectedChapter._id,
-          question: this.tempQuestionTitle,
-          title: "",
-          isAnswered: false,
-          isStandard: false,
-          order: 0,
-          textContent: "",
-          imageCaption: "",
-          imageFileNameServer: "",
-          imageFileName: "",
-          lastUpdated: new Date(),
-          pagesCount: 0,
-        }
-        const result = await axios.post(serverUrl + "/api/stories/", newStory, {
-          withCredentials: true,
-        })
-        this.isAddingQuestion = false
-        this.showingaddQuestionOverlay = false
-
-        this.loading = false
-        this.showingOverlay = false
-
-        if (result.status == 200) {
-          newStory._id = result.data._id
-          newStory.editingTitle = false
-          newStory.tempTitle = ""
-          this.selectedChapter.storiesCount++
-          this.selectedChapter.stories.push(newStory)
-          await this.selectChapter(null, 0, {
-            noClick: true,
-          })
-        } else {
-          console.log(result.data)
-        }
-
-        this.tempQuestionTitle = ""
-      } catch (error) {
-        this.loading = false
-        this.showingOverlay = false
-        this.showingaddQuestionOverlay = false
-        this.tempQuestionTitle = ""
-        this.isAddingQuestion = false
-        console.log(error)
-      }
     },
     startDeletingStory: function (Qid) {
       this.deletingStoryId = Qid
@@ -1432,9 +1240,42 @@ export default {
           { withCredentials: true }
         )
         if (result.status == 200) {
-          await this.selectChapter(null, 0, {
-            noClick: true,
-          })
+          const result2 = await axios.get(
+            serverUrl +
+              "/api/chapters/" +
+              this.selectedChapter._id +
+              "?populated=stories",
+            { withCredentials: true }
+          )
+          if (result2.status == 200) {
+            const chapter = result2.data
+            chapter.isShowingAnswered = this.selectedChapter?.isShowingAnswered
+            chapter.tempTitle = ""
+            chapter?.stories?.forEach((story, storyIndex) => {
+              story.editingTitle = false
+              story.tempTitle = ""
+              chapter.stories[storyIndex] = story
+            })
+            this.selectedChapter = JSON.parse(JSON.stringify(chapter))
+            // SORT BY ORDER ATTRIBUTE
+
+            let orderedStories = []
+            this.selectedChapter.answeredStories.forEach((id) => {
+              const storyIndex = this.selectedChapter?.stories?.findIndex(
+                (story) => id == story._id
+              )
+              if (storyIndex > -1) {
+                orderedStories.push(this.selectedChapter.stories[storyIndex])
+                this.selectedChapter?.stories?.splice(storyIndex, 1)
+              }
+            })
+            this.selectedChapter.stories =
+              this.selectedChapter?.stories?.concat(orderedStories)
+            this.backupStories = this.selectedChapter.stories
+            this.filterStories()
+            this.showingOverlay = false
+            this.loading = false
+          }
         }
 
         this.selectedPaginationIndex = 1
@@ -1458,7 +1299,6 @@ export default {
     cancelNewStory: function () {
       this.tempQuestionTitle = ""
       this.isAddingQuestion = false
-      this.showingaddQuestionOverlay = false
     },
     showChapters: async function () {
       this.defaultQuestion = ""
@@ -1470,7 +1310,7 @@ export default {
       await this.$store.dispatch("fetchPopulatedChapters")
       this.showingOverlay = false
       this.loading = false
-      this.selectedPaginationIndex = 0
+      this.selectedPaginationIndex = 1
       this.tempSelectedPaginationIndex = 1
       this.showingStories = false
       this.showingChapters = true
@@ -1478,15 +1318,24 @@ export default {
       this.selectedChapter = null
       this.backupStories = []
     },
-    showStoryForm: async function (event, keyStories, options) {
+    showStoryForm: async function (event = null, keyStories, options) {
       if (
-        (!event.target.classList.contains("question-control") &&
-          !this.selectedChapter.stories[keyStories].editingTitle) ||
+        (!event?.target?.classList?.contains("question-control") &&
+          !this?.selectedChapter?.stories[keyStories]?.editingTitle) ||
         (options && options.noClick)
       ) {
         try {
+          let StoryID = null
           if (options && options.noClick) {
             this.clearAutoSave()
+          }
+          if (options?.onmount) {
+            const storyIndex = this.selectedChapter?.stories?.findIndex(
+              (story) => keyStories == story?._id
+            )
+            StoryID = storyIndex
+          } else {
+            StoryID = keyStories
           }
           this.editingSelectedChapter = false
           this.selectedChapter.tempTitle = ""
@@ -1496,7 +1345,7 @@ export default {
           const result = await axios.get(
             serverUrl +
               "/api/stories/" +
-              this.selectedChapter.stories[keyStories]._id,
+              this.selectedChapter.stories[StoryID]?._id,
             { withCredentials: true }
           )
           if (result.status == 200) {
@@ -1504,7 +1353,7 @@ export default {
             story.editingTitle = false
             story.tempTitle = ""
             this.selectedStory = JSON.parse(JSON.stringify(story))
-            this.SelectedStoryIndex = keyStories
+            this.SelectedStoryIndex = StoryID
             this.showingForm = true
             this.showingStories = false
             this.showingOverlay = false
@@ -1570,6 +1419,7 @@ export default {
               const chosenRatio =
                 widthRatio > heightRatio ? heightRatio : widthRatio
 
+              console.log(chosenRatio)
               canvas.width = width * chosenRatio
               canvas.height = height * chosenRatio
 
@@ -1591,14 +1441,10 @@ export default {
               const imageData = canvas.toDataURL("image/jpeg")
               this.selectedStory.imageBase64 = imageData
               this.selectedStory.imageFileName = file.name
-                ?.normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
             }
           } else {
             this.selectedStory.imageBase64 = reader.result
             this.selectedStory.imageFileName = file.name
-              ?.normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "")
           }
           await this.uploadStoryImage()
         } else {
@@ -1810,8 +1656,8 @@ export default {
       }
     },
     calculatePagesCount: function () {
-      const answeredStories = this.selectedChapter.stories.filter(
-        (story) => story?.isAnswered
+      const answeredStories = this.selectedChapter?.stories?.filter(
+        (story) => story.isAnswered
       )
       const pagesCount = answeredStories.reduce((prev, current) => {
         return prev + current.pagesCount
@@ -1906,131 +1752,6 @@ export default {
       this.errorReason = ""
       this.errorParagraph = ""
     },
-    getNexDateQuestion: function (first = false) {
-      let diffDay = dayjs(this.nextDateTosend).day() - 1
-      let nexSentDate = this.nextDateTosend
-      let diffMonthDay
-      let nextMonthDate = dayjs(nexSentDate)?.add(1, "month").endOf("month")
-      let nextMonth = dayjs(nextMonthDate).get("month") + 1
-      let nextYear = dayjs(nextMonthDate).get("year")
-      const newmonthDate = "01/" + nextMonth + "/" + nextYear
-      const startDayofMonth = dayjs(newmonthDate).day()
-
-      const hoursDiff = dayjs().diff(dayjs(this.nextDateTosend), "hour")
-      let diffWeekDay = Math.floor(hoursDiff / 24)
-      switch (this.mailFrequence) {
-        case 1:
-          if (
-            dayjs(this.nexDateToSend).isToday() &&
-            dayjs().hour() < 20 &&
-            first
-          ) {
-            nexSentDate = dayjs(this.nextDateTosend)
-          } else {
-            nexSentDate = dayjs(this.nextDateTosend)?.add("1", "day")
-          }
-          break
-        case 2:
-          if (
-            dayjs(this.nexDateToSend).day() == 1 &&
-            dayjs(this.nexDateToSend).isToday() &&
-            dayjs().hour() < 20 &&
-            first
-          ) {
-            diffDay = 7
-          }
-          if (diffDay === -1) {
-            diffDay = 1
-          } else {
-            diffDay = 7 - diffDay
-          }
-          nexSentDate = dayjs(this.nextDateTosend)?.add(
-            diffDay.toString(),
-            "day"
-          )
-          break
-        case 3:
-          if (
-            dayjs(this.nextDateTosend).day() == 1 &&
-            dayjs(this.nexDateToSend).isToday() &&
-            dayjs().hour() < 20 &&
-            first
-          ) {
-            nexSentDate = dayjs(this.nextDateTosend)
-          } else if (dayjs(this.nextDateTosend).day() == 1) {
-            nexSentDate = dayjs(this.nextDateTosend)?.add(3, "day")
-          } else if (
-            dayjs(this.nextDateTosend).day() == 4 &&
-            dayjs(this.nexDateToSend).isToday() &&
-            dayjs().hour() < 20 &&
-            first
-          ) {
-            nexSentDate = dayjs(this.nextDateTosend)
-          } else if (dayjs(this.nextDateTosend).day() == 4) {
-            nexSentDate = dayjs(this.nextDateTosend)?.add(4, "day")
-          } else {
-            if (dayjs(this.nextDateTosend).day() == 0) {
-              nexSentDate = dayjs(this.nextDateTosend)?.add(1, "day")
-            } else if (dayjs(this.nextDateTosend).day() > 4) {
-              nexSentDate = dayjs(this.nextDateTosend)?.add(
-                4 - (dayjs(this.nextDateTosend).day() - 4),
-                "day"
-              )
-            } else {
-              if (dayjs(this.nextDateTosend).day() == 2) {
-                nexSentDate = dayjs(this.nextDateTosend)?.add("2", "day")
-              } else {
-                nexSentDate = dayjs(this.nextDateTosend)?.add("1", "day")
-              }
-            }
-          }
-          break
-        case 4:
-          if (first) {
-            if (diffWeekDay > 7) {
-              if (diffDay === -1) {
-                diffWeekDay = 1
-              } else {
-                diffWeekDay = 7 - diffDay
-              }
-            } else {
-              if (diffDay === -1) {
-                diffWeekDay = 8
-              } else {
-                diffWeekDay = 14 - diffDay
-              }
-            }
-            if (
-              dayjs(this.nexDateToSend).day() == 1 &&
-              dayjs(this.nexDateToSend).isToday() &&
-              dayjs().hour() < 20
-            ) {
-              diffWeekDay = 0
-            }
-            nexSentDate = dayjs(this.nextDateTosend)?.add(diffWeekDay, "day")
-          } else {
-            nexSentDate = dayjs(this.nextDateTosend)?.add("14", "day")
-          }
-          break
-        case 5:
-          if (startDayofMonth == 0) {
-            diffMonthDay = 1
-          } else if (startDayofMonth == 1) {
-            diffMonthDay = 0
-          } else {
-            diffMonthDay = 8 - startDayofMonth
-          }
-          nexSentDate = dayjs(newmonthDate)?.add(diffMonthDay, "day")
-          break
-        default:
-          nexSentDate = dayjs(this.nextDateTosend)?.add(
-            diffDay.toString(),
-            "day"
-          )
-      }
-      this.nextDateTosend = nexSentDate
-      return dayjs(nexSentDate).format("ddd, MMMM D, YYYY")
-    },
   },
   computed: {
     paginationsCount: function () {
@@ -2050,9 +1771,8 @@ export default {
       let iterator = 0
       while (iterator < this.selectedChapter?.stories?.length) {
         const showingAnswered = this.selectedChapter?.isShowingAnswered
-        const isAnswered = this.selectedChapter.stories[iterator]?.isAnswered
-
-        if (!isAnswered && !showingAnswered) {
+        const isAnswered = this.selectedChapter.stories[iterator].isAnswered
+        if (isAnswered && showingAnswered) {
           indexes.push(iterator)
         }
         iterator++
@@ -2069,36 +1789,19 @@ export default {
       return this.$store.getters.getBook
     },
     selectedChapterAnsweredCount: function () {
-      if (!this.selectedChapter.stories) {
+      if (!this.selectedChapter?.stories) {
         return 0
       }
       let count = 0
-      this.selectedChapter.stories.forEach((story) => {
-        if (story?.isAnswered) {
+      this.selectedChapter?.stories?.forEach((story) => {
+        if (story.isAnswered) {
           count++
         }
       })
       return count
     },
-    selectedQuestionSent: function () {
-      const count = this.selectedChapter.stories?.filter(
-        (story) => story.notifSent
-      ).length
+  },
 
-      return count
-    },
-  },
-  watch: {
-    isDragging(newValue) {
-      if (newValue) {
-        this.delayedDragging = true
-        return
-      }
-      this.$nextTick(() => {
-        this.delayedDragging = false
-      })
-    },
-  },
   async mounted() {
     try {
       this.showingOverlay = true
@@ -2107,31 +1810,25 @@ export default {
       await this.$store.dispatch("fetchPopulatedChapters")
       this.showingOverlay = false
       this.loading = false
-      this.selectedChapter = this.chapters[0]
 
-      const story = this.selectedChapter?.stories?.find(
-        (stro) => stro?._id == this.defaultQuestion
-      )
-      if (story?.isAnswered) {
-        this.$router.push(`/stories?nbr=2&question-id=${this.defaultQuestion}`)
+      if (this.defaultQuestion != null && this.defaultQuestion != "") {
+        await this.selectChapter(null, this.defaultChapter, {
+          noClick: true,
+        })
+        await this.showStoryForm(null, this.defaultQuestion, {
+          noClick: true,
+          onmount: this.defaultQuestion == 0 ? false : true,
+        })
       } else {
-        if (this.defaultQuestion != null && this.defaultQuestion != "") {
-          await this.selectChapter(null, this.defaultChapter, {
-            noClick: true,
-          })
-          await this.showStoryForm(null, this.defaultQuestion, {
-            noClick: true,
-            onmount: this.defaultQuestion == 0 ? false : true,
-          })
-        } else {
-          await this.selectChapter(null, 0, {
-            noClick: true,
-          })
-        }
-
-        if (this.questionID) {
-          this.$router.replace("/")
-        }
+        await this.selectChapter(null, 0, {
+          noClick: true,
+        })
+      }
+      this.selectedChapter.isShowingAnswered = true
+      this.selectedPaginationIndex = 1
+      this.cancelNewStory()
+      if (this.questionID) {
+        this.$router.replace("/stories")
       }
     } catch (error) {
       console.log(error)
@@ -2142,29 +1839,17 @@ export default {
   async created() {
     let params = new URLSearchParams(document.location.search)
     this.questionID = params.get("question-id")
+    console.log("this.question:", this.questionID)
     //const chapterIndex = params.get("chapter-id")
     if (this.questionID) {
       this.defaultQuestion = this.questionID.toString()
+      //this.defaultChapter = chapterIndex ? chapterIndex.toString() : 0
       this.defaultChapter = 0
     }
-    this.selectedChapter.isShowingAnswered = false
-    if (performance.navigation.type == 1) {
-      if (this.defaultQuestion != null && this.defaultQuestion != "") {
-        this.showChapters()
-      }
-    }
-    this.mailFrequence = this.user.mailFrequence
-    this.lastQuestionsent = this.user?.lastQuestionsent
-      ? this.user?.lastQuestionsent
-      : dayjs().format("MM/DD/YYYY")
-    this.nextDateTosend = this.lastQuestionsent
-    this.displayDate =
-      this.user.guest == 1 ||
-      this.user.isBuyer == 0 ||
-      (this.user.isBuyer == 1 && this.user.guest !== 1)
-        ? true
-        : false
-    //
+    await this.selectChapter(null, 0, {
+      noClick: true,
+    })
+    this.selectedChapter.isShowingAnswered = true
   },
 }
 </script>
@@ -2173,21 +1858,7 @@ export default {
 /* ************** */
 /* chapters section */
 /* ************** */
-.question-head:hover {
-  background: rgba(6, 42, 32, 0.1);
-  border: none;
-}
-.mobile {
-  display: none !important;
-}
-.desktop {
-  display: block;
-}
 
-.question-control-pencil {
-  margin-right: 25px;
-  height: 26px;
-}
 .chapter-head {
   background-color: white;
   border-radius: 25px;
@@ -2197,11 +1868,7 @@ export default {
   align-items: center;
   cursor: pointer;
 }
-.angle-container {
-  background: white;
-  border-radius: 5px;
-  padding: 7px 11px;
-}
+
 /* stories section  */
 
 .chapter-counter {
@@ -2213,9 +1880,6 @@ export default {
   margin-right: 5px;
 }
 
-.questions-section-container-header {
-  margin-top: 30px;
-}
 .chapter-title {
   font-weight: 400;
   font-size: 18px;
@@ -2225,9 +1889,7 @@ export default {
 .pen-icon-img {
   vertical-align: sub;
 }
-.open-question-image {
-  height: 20px;
-}
+
 .add-icon-container {
   margin-bottom: 14px;
 }
@@ -2287,7 +1949,11 @@ export default {
   display: flex;
   align-items: center;
 }
-
+.angle-container {
+  background: white;
+  border-radius: 5px;
+  padding: 7px 11px;
+}
 .questions-chapter-number > span {
   display: inline-block;
   margin-right: 12px;
@@ -2317,42 +1983,10 @@ export default {
   line-height: 27px;
   background: transparent;
   border-radius: 100px;
-  color: #14473c;
   border: 1px solid #14473c;
+  color: #14473c;
   margin-right: 20px;
   gap: 10px;
-}
-.empty-section {
-  text-align: center;
-  padding: 15%;
-}
-.empty-story-message {
-  font-family: galaxie-polaris;
-  font-style: normal;
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 27px;
-  color: #062a20;
-}
-.loading {
-  text-align: center;
-  position: absolute;
-  color: #fff;
-  z-index: 9;
-  background: #14473c;
-  padding: 8px 18px;
-  border-radius: 5px;
-  left: calc(50% - 45px);
-  top: calc(50% - 18px);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-.fade-enter,
-.fade-leave-to {
-  opacity: 0;
 }
 .tab-btn.active {
   background: #14473c;
@@ -2369,15 +2003,25 @@ export default {
   border: 1px solid rgba(6, 42, 32, 0.2);
   border-radius: 30px;
   position: relative;
+  min-height: 500px;
 }
 
-.questions-count {
+.empty-story-message {
   font-family: galaxie-polaris;
   font-style: normal;
   font-weight: 500;
   font-size: 16px;
-  line-height: 17px;
+  line-height: 27px;
   color: #062a20;
+}
+.empty-story-sub-message {
+  margin-top: 10px;
+  font-family: galaxie-polaris;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 18px;
+  color: #062a2066;
 }
 .add-question-container {
   border-radius: 100px;
@@ -2407,6 +2051,7 @@ export default {
   padding: 20px 32px;
   background: #ffffff;
   border: 1px solid rgba(6, 42, 32, 0.1);
+
   border-radius: 18px;
   margin-top: 14px;
 }
@@ -2431,22 +2076,7 @@ export default {
   line-height: 27px;
   caret-color: #062a20;
 }
-.question-title-textarea {
-  outline: none;
-  width: 100%;
-  resize: none;
-  font-family: galaxie-polaris;
-  padding: 0;
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 27px;
-  caret-color: #062a20;
-  border: 1px solid #14473c;
-  border-radius: 18px;
-  padding: 10px;
-}
-.question-title-input::placeholder,
-.question-title-textarea {
+.question-title-input::placeholder {
   color: rgba(6, 42, 32, 0.4);
 }
 
@@ -2476,33 +2106,6 @@ export default {
 
 .canvas-container {
   display: none;
-}
-.tooltip {
-  position: relative;
-  display: inline-block;
-  font-size: 11px;
-}
-
-.info-icon-container .tooltip .tooltiptext {
-  visibility: hidden;
-  width: 200px;
-  background-color: white;
-  color: black;
-  border: 1px solid rgba(6, 42, 32, 0.2);
-  text-align: center;
-  border-radius: 2px;
-  border-radius: 6px;
-  padding: 15px 10px;
-  font-size: 13px;
-  /* Position the tooltip */
-  position: absolute;
-  z-index: 1;
-  right: -36px;
-  top: -60px;
-}
-
-.tooltip:hover .tooltiptext {
-  visibility: visible;
 }
 
 .story-form-container {
@@ -2690,17 +2293,14 @@ export default {
   justify-content: space-between;
   margin-bottom: 28px;
 }
+.empty-section {
+  text-align: center;
+  padding: 15%;
+}
 
 .question-control-image {
   height: 18px;
   width: 18px;
-}
-.sent-date {
-  margin-bottom: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #14473c;
-  line-height: 27px;
 }
 
 .open-question-button {
@@ -2742,7 +2342,6 @@ export default {
 .form-submit-container {
   display: flex;
 }
-
 .story-form-top-button {
   width: 21px;
   height: 24px;
@@ -2751,6 +2350,7 @@ export default {
   width: 28px;
   height: 27px;
 }
+
 .scrollable {
   height: 100%;
   overflow-y: auto;
@@ -2758,6 +2358,7 @@ export default {
 }
 
 .route-section.chapters {
+  overflow: scroll;
   padding-right: 15px;
   position: relative;
 }
@@ -2782,7 +2383,7 @@ export default {
   border-top: 10px solid #e1504b;
   animation-name: bobbingDown;
 }
-.up {
+.chapters .up {
   top: 20px;
   border-right: 10px solid transparent;
   border-left: 10px solid transparent;
@@ -2844,7 +2445,6 @@ export default {
   cursor: pointer;
   border: none;
 }
-
 .shared-btn.shared {
   background: #062a2033;
   border: none;
@@ -2853,59 +2453,8 @@ export default {
   .container {
     width: 100%;
   }
-  .question-control-delete {
-    border: 1px solid rgba(20, 71, 60, 0.2);
-    border-radius: 50px;
-    margin-top: 10px;
-    padding: 5px 13px;
-    color: #14473c;
-    max-width: 92px;
-    font-size: 14px;
-    line-height: 21px;
-  }
   .route-section {
     padding: 24px;
-  }
-  .shared-container {
-    width: 100%;
-  }
-  .shared-btn {
-    border: none;
-    width: 100%;
-  }
-  .questions-section-container-header {
-    margin-top: 20px;
-  }
-  .tab-mobile {
-    width: 100%;
-    justify-content: space-around;
-  }
-  .site-background.hidebuttonmobilemenu .menu-mobile .bm-burger-button {
-    display: none;
-  }
-  .form-response-question {
-    margin-top: 30px;
-  }
-  .question-control-image {
-    height: 12px;
-    width: 12x;
-  }
-  .question-control-pencil {
-    margin-right: 20px;
-    height: 33px;
-    margin-top: 1px;
-  }
-  .search-secion,
-  .desktop {
-    display: none !important;
-  }
-  .mobile {
-    display: block !important;
-  }
-  .sent-date {
-    font-size: 12px;
-    line-height: 12px;
-    margin-bottom: 7px;
   }
   .mobile-chapter-toggle {
     display: block;
@@ -2917,13 +2466,29 @@ export default {
     height: 16px;
     width: 9px;
   }
-  .questions-section-container {
-    margin-left: 0px;
-    margin-top: 0px;
+  .question-control-image {
+    height: 12px;
+    width: 12px;
   }
   .drag-container {
     min-width: 16px;
     margin-right: 15px;
+  }
+  .angle-container {
+    background: white;
+    border-radius: 5px;
+    padding: 7px 11px;
+  }
+  .shared-container {
+    width: 100%;
+  }
+  .shared-btn {
+    border: none;
+    width: 100%;
+  }
+  .questions-section-container {
+    margin-left: 0px;
+    margin-top: 0px;
   }
   .back-container {
     display: none;
@@ -2940,14 +2505,15 @@ export default {
   .toggle-standard-mobile {
     display: flex;
   }
+  .form-response-question {
+    margin-top: 45px;
+  }
   .questions-container {
     padding: 0;
     border: none;
     background-color: #f6f4f3;
   }
-  .tabs-span {
-    margin-top: 2px;
-  }
+
   .hide-standards-text {
     font-size: 12px;
     line-height: 18px;
@@ -2955,8 +2521,8 @@ export default {
     color: #062a20;
   }
   .add-question-container {
-    margin-top: 6px;
     padding: 6px 26px;
+    margin-top: 6px;
     background: white;
   }
   .add-question-text {
@@ -2966,7 +2532,9 @@ export default {
     line-height: 27px;
     font-weight: 400;
   }
-
+  .tabs-span {
+    margin-top: 2px;
+  }
   .plus-sign {
     width: 12px;
     height: 12px;
@@ -2986,15 +2554,14 @@ export default {
     font-family: galaxie-polaris;
     font-style: normal;
     font-weight: 550;
-    font-size: 16px;
-    line-height: 27px;
+    font-size: 14px;
+    line-height: 16px;
     color: #062a20;
   }
-
-  .question-control-image {
-    height: 18px;
-    width: 18px;
+  .questions-container {
+    min-height: unset;
   }
+
   .editing-buttons-container {
     margin-top: 15px;
   }
@@ -3007,16 +2574,15 @@ export default {
   }
 
   .open-question-image {
-    height: 12px;
-    width: 10px;
+    height: 14px;
+    width: 14x;
     display: block;
   }
 
   .route-title.form-question {
     font-size: 14px;
-    font-weight: 550;
+    font-weight: 500;
     line-height: 15px;
-    color: #062a20;
   }
 
   .story-form-container {
@@ -3117,11 +2683,6 @@ export default {
     width: 16px;
     height: 16px;
   }
-  .angle-container {
-    background: white;
-    border-radius: 5px;
-    padding: 7px 11px;
-  }
   .question-search-input {
     width: 100px;
   }
@@ -3136,6 +2697,7 @@ export default {
 
   .route-section.chapters {
     padding-right: 15px;
+    overflow: scroll;
   }
   .chapter-head.adding {
     display: block;
