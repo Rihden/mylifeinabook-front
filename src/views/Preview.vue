@@ -29,12 +29,12 @@
 </template>
 
 <script>
-import { generateBook } from "../interiorGeneration";
-import { serverUrl } from "../severUrl";
-import axios from "axios";
-import navbar from "../components/navbar.vue";
+import { generateBook } from "../interiorGeneration"
+import { serverUrl } from "../severUrl"
+import axios from "axios"
+import navbar from "../components/navbar.vue"
 // import pdfobject from "pdfobject";
-import pdf from "../components/PDFJSViewer.vue";
+import pdf from "../components/PDFJSViewer.vue"
 
 export default {
   components: {
@@ -44,14 +44,14 @@ export default {
   data() {
     return {
       isLoadingPdf: false,
-    };
+    }
   },
   computed: {
     user: function () {
-      return this.$store.getters.getUser;
+      return this.$store.getters.getUser
     },
     pdfFile: function () {
-      return this.$store.getters.getPdfFile;
+      return this.$store.getters.getPdfFile
     },
   },
   methods: {
@@ -60,78 +60,85 @@ export default {
         const result = await axios.get(
           serverUrl + "/api/books/" + this.user.bookId + "?populated=true",
           { withCredentials: true }
-        );
+        )
         const ornament = await fetch(serverUrl + "/book ornament.jpg").then(
           (res) => res.arrayBuffer()
-        );
-        const bookStyles = { ornament };
-        const book = JSON.parse(JSON.stringify(result.data));
+        )
+        const bookStyles = { ornament }
+        const book = JSON.parse(JSON.stringify(result.data))
         //sort stories inside each chapter
-        book.chapters.forEach((chapter, chapterIndex) => {
-          let orderedStories = [];
+        /* book.chapters.forEach((chapter, chapterIndex) => {
+          let orderedStories = []
           chapter.answeredStories.forEach((id) => {
             const storyIndex = chapter.stories.findIndex(
               (story) => id == story._id
-            );
+            )
             if (storyIndex > -1) {
-              orderedStories.push(chapter.stories[storyIndex]);
-              chapter.stories.splice(storyIndex, 1);
+              orderedStories.push(chapter.stories[storyIndex])
+              chapter.stories.splice(storyIndex, 1)
             }
-          });
+          })
           book.chapters[chapterIndex].stories =
-            chapter.stories.concat(orderedStories);
-        });
+            chapter.stories.concat(orderedStories)
+        })
 
         //sort chapters
-        const unorderedChapters = book.chapters;
-        let orderedChapters = [];
-        const chaptersOrder = book.chaptersOrder;
+        const unorderedChapters = book.chapters
+        let orderedChapters = []
+        const chaptersOrder = book.chaptersOrder
         if (unorderedChapters.length > 0) {
           chaptersOrder.forEach((id) => {
             //find index of current chapter
             const index = unorderedChapters.findIndex((chapter) => {
-              return chapter._id == id;
-            });
+              return chapter._id == id
+            })
             //push to ordered array
-            orderedChapters.push(unorderedChapters[index]);
-          });
-        }
-        book.chapters = orderedChapters;
+            orderedChapters.push(unorderedChapters[index])
+          })
+        }*/
 
+        /* const resultC = await axios.get(
+          serverUrl +
+            "/api/chapters/?bkid=" +
+            this.user.bookId +
+            "&populated=stories&answered=true",
+          { withCredentials: true }
+        )
+        if (resultC.status == 200) {
+          let chapter = resultC.data?.chapters
+
+          chapter.stories = resultC.data?.stories
+
+          const orderedChapters = JSON.parse(JSON.stringify(chapter))
+
+          book.chapters = [orderedChapters]
+        }*/
+        //book.chapters = orderedChapters
         const resultBookStats = await axios.get(
           serverUrl + "/api/books/stats/" + this.user.bookId,
           { withCredentials: true }
-        );
-        const pagesCount = resultBookStats.data.pagesCount;
-        book.pagesCount = pagesCount;
-        const buffer = await generateBook(book, bookStyles);
+        )
+        const pagesCount = resultBookStats.data.pagesCount
+        book.pagesCount = pagesCount
+        const buffer = await generateBook(book, bookStyles)
         const blob = new Blob([buffer], {
           type: "application/pdf",
-        });
-        const pdfFile = URL.createObjectURL(blob);
-        this.$store.commit("setPdfFile", pdfFile);
-
-        // pdfobject.embed(buffer, "#testPdf", {
-        //   assumptionMode: false,
-        //   forcePDFJS: true,
-        //   width: "600px",
-        //   height: "500px",
-        //   PDFJS_URL: "lib/pdfjs-2.12.313-dist/web/viewer.html",
-        //   forceIframe: true,
-        // });
+        })
+        const pdfFile = URL.createObjectURL(blob)
+        this.$store.commit("setPdfFile", pdfFile)
       } catch (error) {
-        console.log(error);
+        console.log(error)
       }
     },
   },
   async mounted() {
     try {
-      await this.applyContent();
+      await this.applyContent()
     } catch (error) {
-      console.log(error);
+      console.log(error)
     }
   },
-};
+}
 </script>
 
 <style>

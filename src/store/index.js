@@ -192,29 +192,31 @@ const store = new Vuex.Store({
                 let storiesList = []
                 if (chapters.length > 1) {
                   chapters.forEach(async (chapter, index) => {
-                    chapter.tempTitle = chapter.title
-                    chapter.isShowingAnswered = false
-                    answeredStories.push(chapter.answeredStories)
-                    answeredStoriesCount =
-                      answeredStoriesCount + chapter.answeredStoriesCount
-                    pagesCount = pagesCount + chapter.pagesCount
-                    storiesCount = storiesCount + chapter.storiesCount
+                    if (chapter?.stories?.length > 0) {
+                      chapter.tempTitle = chapter.title
+                      chapter.isShowingAnswered = false
+                      answeredStories.push(chapter.answeredStories)
+                      answeredStoriesCount =
+                        answeredStoriesCount + chapter.answeredStoriesCount
+                      pagesCount = pagesCount + chapter.pagesCount
+                      storiesCount = storiesCount + chapter.storiesCount
 
-                    const stories = chapter.stories
-                    stories?.forEach(async (story) => {
-                      story.chapterId = chapterId
-                      await axios.put(serverUrl + "/api/stories/", story, {
-                        withCredentials: true,
+                      const stories = chapter.stories
+                      stories?.forEach(async (story) => {
+                        story.chapterId = chapterId
+                        await axios.put(serverUrl + "/api/stories/", story, {
+                          withCredentials: true,
+                        })
                       })
-                    })
-                    storiesList.push(stories)
-                    if (index == 0) {
-                      chapters[0] = chapter
-                    } else {
+                      storiesList.push(stories)
+                      if (index == 0) {
+                        chapters[0] = chapter
+                      } /*else {
                       await axios.delete(
                         serverUrl + "/api/chapters/" + chapter._id,
                         { withCredentials: true }
                       )
+                    }*/
                     }
                   })
                   chapters[0].answeredStories = answeredStories
