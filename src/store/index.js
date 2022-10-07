@@ -91,7 +91,10 @@ const store = new Vuex.Store({
   actions: {
     async fetchChapters(context) {
       return new Promise((resolve, reject) => {
-        const bookId = context.state.user.bookId
+        const bookId = context.state.user?.defaultBookId
+          ? context.state.user.bookId
+          : context.state.user.bookId
+        console.log("bookId: ", bookId)
         if (bookId) {
           axios
             .get(serverUrl + "/api/books/" + bookId + "?populated=true", {
@@ -174,7 +177,14 @@ const store = new Vuex.Store({
     },
     async fetchPopulatedChapters(context) {
       return new Promise((resolve, reject) => {
-        const bookId = context.state.user.bookId
+        const bookId = context.state.user?.defaultBookId
+          ? context.state.user.defaultBookId
+          : context.state.user.bookId
+        console.log(
+          "context.state.user?.defaultBookId",
+          context.state.user?.defaultBookId
+        )
+        console.log("fetchPopulatedChapters", bookId)
         if (bookId) {
           axios
             .get(serverUrl + "/api/books/" + bookId + "?populated=true", {

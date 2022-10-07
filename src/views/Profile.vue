@@ -898,7 +898,12 @@ export default {
       this.user[key] = this[key]
       const mailformat = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
       this.errorStatus = { status: false, message: "" }
-      if (key === "recipEmail") {
+      if (this.user?.giftSubscriptionSent) {
+        this.errorStatus = {
+          status: true,
+          message: "Gift Subscription already sent",
+        }
+      } else if (key === "recipEmail") {
         if (
           this.recipEmail.length > 50 ||
           !this.recipEmail.match(mailformat) ||
@@ -917,9 +922,9 @@ export default {
           }
         }
       }
-      console.log(this.errorStatus.status)
-      console.log("rrrr", this.user.recipGiftDate)
+
       if (!this.errorStatus.status) {
+        this.user.updateBoth = true
         const response = await axios.put(serverUrl + "/api/users/", this.user, {
           withCredentials: true,
         })

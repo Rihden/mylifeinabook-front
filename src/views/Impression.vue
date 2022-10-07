@@ -524,8 +524,11 @@ export default {
       if (this.user) {
         this.showingOverlay = true
         this.loading = true
+        const bookId = this.user?.defaultBookId
+          ? this.user?.defaultBookId
+          : this.user.bookId
         const result = await axios.get(
-          serverUrl + "/api/books/stats/" + this.user.bookId,
+          serverUrl + "/api/books/stats/" + bookId,
           { withCredentials: true }
         )
         if (result.data.pagesCount % 2 == 1) {

@@ -274,15 +274,27 @@ export default {
           this.loading = false
           this.showingOverlay = false
           console.log(this.$router)
-          const historyLocation = this.questionId
-            ? `/?question-id=${this.questionId}&chapter-id=${this.chapterId}`
-            : this.$router.history._startLocation
-          this.$router.push(
-            historyLocation.toLowerCase().indexOf("login") === -1 &&
-              historyLocation.toLowerCase().indexOf("register") === -1
-              ? historyLocation
-              : "/"
-          )
+          if (response.data?.nbrOrders > 1) {
+            const historyLocation = this.questionId
+              ? `/welcome?question-id=${this.questionId}&chapter-id=${this.chapterId}`
+              : this.$router.history._startLocation
+            this.$router.push(
+              historyLocation.toLowerCase().indexOf("login") === -1 &&
+                historyLocation.toLowerCase().indexOf("register") === -1
+                ? historyLocation
+                : "/welcome"
+            )
+          } else {
+            const historyLocation = this.questionId
+              ? `/?question-id=${this.questionId}&chapter-id=${this.chapterId}`
+              : this.$router.history._startLocation
+            this.$router.push(
+              historyLocation.toLowerCase().indexOf("login") === -1 &&
+                historyLocation.toLowerCase().indexOf("register") === -1
+                ? historyLocation
+                : "/"
+            )
+          }
         }
       } catch (error) {
         this.loading = false

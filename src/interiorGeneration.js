@@ -57,24 +57,27 @@ async function generateBook(book, bookStyles) {
           pageHeight * DISTANCE_PER_MM,
         ])
         const chapterPageHeight = pageHeight * DISTANCE_PER_MM
+        try {
+          await drawCenteredParagraph(chapter.title, {
+            fontSize: chapterTitleText.fontSize,
+            lineHeight: chapterTitleText.lineHeight,
+            color: chapterTitleText.color,
+            maxWidth: chapterTitleText.maxWidth * DISTANCE_PER_MM,
+            font: ptSerifFontBold,
+            offsetY: chapterPageHeight / 2,
+            page: newPage,
+          })
 
-        await drawCenteredParagraph(chapter.title, {
-          fontSize: chapterTitleText.fontSize,
-          lineHeight: chapterTitleText.lineHeight,
-          color: chapterTitleText.color,
-          maxWidth: chapterTitleText.maxWidth * DISTANCE_PER_MM,
-          font: ptSerifFontBold,
-          offsetY: chapterPageHeight / 2,
-          page: newPage,
-        })
-
-        await generateChapter(chapter.stories, {
-          ptSerifFontItalic,
-          ptSerifFontBold,
-          ptSerifFontRegular,
-          ornamentImage,
-          doc: pdfDoc,
-        })
+          await generateChapter(chapter.stories, {
+            ptSerifFontItalic,
+            ptSerifFontBold,
+            ptSerifFontRegular,
+            ornamentImage,
+            doc: pdfDoc,
+          })
+        } catch (err) {
+          console.log("error", err)
+        }
       }
     }
 

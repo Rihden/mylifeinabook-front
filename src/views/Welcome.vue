@@ -1,6 +1,5 @@
 <template>
   <div class="d-row site-background">
-    <navbar class="desktop-navbar"></navbar>
     <div class="container">
       <div
         class="route-section d-flex-centered"
@@ -11,20 +10,36 @@
 
           <div style="margin-bottom: 32px">
             <span class="welcome-title-text">
-              Your gift is ready for {{ user.recipLName }}
-              {{ user.recipFName }} ,</span
+              Which account would like to enter on?</span
             >
           </div>
           <div style="margin-bottom: 50px; text-align: center">
-            <span class="welcome-paragraph-text">
-              You can now customize the questions for {{ user.recipLName }}
-              {{ user.recipFName }}. But first, we invite you to watch a quick
-              tutorial!</span
+            <div
+              v-for="(user, indexUser) in listOrders"
+              :key="indexUser"
+              class="ptr"
             >
+              <div>
+                <div
+                  class="guest-container ptr"
+                  :class="{ selected: selectedBook === user.bookId }"
+                  @click="selectedBook = user.bookId"
+                >
+                  {{
+                    user.recipLName
+                      ? user.recipLName + " " + user.recipFName
+                      : user.name
+                  }}
+                </div>
+              </div>
+            </div>
           </div>
           <div style="margin-bottom: 18px; width: 200px">
-            <button class="confirm-impression-btn ptr" @click="startEditing()">
-              TUTORIAL
+            <button
+              class="confirm-impression-btn ptr"
+              @click="setdefaultBook()"
+            >
+              LOG IN
             </button>
           </div>
         </div>
@@ -35,26 +50,58 @@
 </template>
 
 <script>
-import navbar from "../components/navbar.vue";
-import { serverUrl } from "../severUrl";
+import navbar from "../components/navbar.vue"
+import { serverUrl } from "../severUrl"
+import axios from "axios"
 export default {
   components: {
     navbar,
   },
+  data() {
+    return {
+      listOrders: [],
+      selectedBook: "",
+    }
+  },
   computed: {
     user: function () {
-      return this.$store.getters.getUser;
+      return this.$store.getters.getUser
     },
     serverUrl: function () {
-      return serverUrl;
+      return serverUrl
     },
   },
   methods: {
-    startEditing: function () {
-      this.$router.push("/");
+    setdefaultBook: async function () {
+      this.user.defaultBookId = this.selectedBook
+      const response = await axios.put(serverUrl + "/api/users/", this.user, {
+        withCredentials: true,
+      })
+      if (response.status == 200) {
+        this.$store.commit("setUser", response.data)
+        await this.$store.dispatch("fetchPopulatedChapters")
+
+        console.log(response.data)
+      }
+      this.$router.push("/")
     },
   },
-};
+  async created() {
+    this.listOrders = [
+      {
+        bookId: this.user.bookId,
+        recipLName: this.user.recipLName,
+        recipFName: this.user.recipFName,
+        name: this.user.name,
+      },
+    ]
+    this.user.listOrders?.map((order) => {
+      if (order && Object.keys(order).length > 0) {
+        this.listOrders.push(order)
+      }
+    })
+  },
+}
 </script>
 
 <style>

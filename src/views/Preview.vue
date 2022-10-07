@@ -57,8 +57,11 @@ export default {
   methods: {
     applyContent: async function () {
       try {
+        const bookId = this.user?.defaultBookId
+          ? this.user?.defaultBookId
+          : this.user.bookId
         const result = await axios.get(
-          serverUrl + "/api/books/" + this.user.bookId + "?populated=true",
+          serverUrl + "/api/books/" + bookId + "?populated=true",
           { withCredentials: true }
         )
         const ornament = await fetch(serverUrl + "/book ornament.jpg").then(
@@ -115,7 +118,7 @@ export default {
         }*/
         //book.chapters = orderedChapters
         const resultBookStats = await axios.get(
-          serverUrl + "/api/books/stats/" + this.user.bookId,
+          serverUrl + "/api/books/stats/" + bookId,
           { withCredentials: true }
         )
         const pagesCount = resultBookStats.data.pagesCount

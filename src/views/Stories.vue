@@ -1081,11 +1081,14 @@ export default {
         try {
           this.showingOverlay = true
           this.loading = true
-
+          const bookId = this.user?.defaultBookId
+            ? this.user?.defaultBookId
+            : this.user.bookId
+          console.log("bookId", bookId)
           const result = await axios.get(
             serverUrl +
               "/api/chapters/?bkid=" +
-              this.user.bookId +
+              bookId +
               "&populated=stories&answered=true",
             { withCredentials: true }
           )
