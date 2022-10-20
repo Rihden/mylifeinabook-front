@@ -1180,6 +1180,8 @@ export default {
     },
     selectChapter: async function (event, id, options) {
       this.nextDateTosend = this.user.lastQuestionsent
+        ? this.user.lastQuestionsent
+        : dayjs().format("MM/DD/YYYY")
       if (
         !(
           (event && event.target.classList.contains("chapter-control")) ||
@@ -1202,7 +1204,7 @@ export default {
             chapter.tempTitle = ""
             chapter.isShowingAnswered = false
             chapter.stories.forEach((story, storyIndex) => {
-              if (!story.notifSent) {
+              if (!story.notifSent && !story.isAnswered) {
                 if (storyIndex === 0) {
                   story.sentDate = this.getNexDateQuestion(true)
                 } else {

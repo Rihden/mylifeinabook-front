@@ -13,6 +13,22 @@
           </router-link>
         </div>
         <div class="nav-items-container">
+          <span class="sotryletter-container">
+            <select
+              v-model="selectedBook"
+              v-if="listOrders.length > 1"
+              @change="onChange()"
+              class="storyletter"
+            >
+              <option
+                v-for="order in listOrders"
+                :value="order.bookId"
+                :key="order.bookId"
+              >
+                {{ order.recipFName ? order.recipFName : order.name }}
+              </option>
+            </select>
+          </span>
           <router-link to="/" v-if="admin != 'true'"
             ><div class="nav-item" @click="reloadChapters()">
               <span>Questions</span>
@@ -165,6 +181,22 @@
         isOpenMenu: !isMenuOpen,
       }"
     >
+      <span class="sotryletter-container">
+        <select
+          v-model="selectedBook"
+          v-if="listOrders.length > 1"
+          @change="onChange()"
+          class="storyletter"
+        >
+          <option
+            v-for="order in listOrders"
+            :value="order.bookId"
+            :key="order.bookId"
+          >
+            {{ order.recipFName ? order.recipFName : order.name }}
+          </option>
+        </select>
+      </span>
       <router-link to="/" v-if="admin != 'true'">
         <span @click="reloadChapters()">Questions</span>
       </router-link>
@@ -219,6 +251,8 @@ export default {
     return {
       nameUser: "",
       isMenuOpen: false,
+      listOrders: [],
+      selectedBook: "",
     }
   },
   components: { Slide },
@@ -242,6 +276,18 @@ export default {
     },
     gorgiasChatOpen: function () {
       window.GorgiasChat.open()
+    },
+    onChange: async function () {
+      this.user.defaultBookId = this.selectedBook
+      const response = await axios.put(serverUrl + "/api/users/", this.user, {
+        withCredentials: true,
+      })
+      if (response.status == 200) {
+        this.$store.commit("setUser", response.data)
+        await this.$store.dispatch("fetchPopulatedChapters")
+        window.location.reload()
+        console.log(response.data)
+      }
     },
     logout: async function () {
       if (this.user) {
@@ -272,11 +318,26 @@ export default {
     },
   },
   created() {
+    this.selectedBook = this.user.defaultBookId
+    this.listOrders = [
+      {
+        bookId: this.user.bookId,
+        recipLName: this.user.recipLName,
+        recipFName: this.user.recipFName,
+        name: this.user.name,
+      },
+    ]
+    this.user.listOrders?.map((order) => {
+      if (order && Object.keys(order).length > 0) {
+        this.listOrders.push(order)
+      }
+    })
     if (this.user.guest == 1) {
       this.nameUser = this.user.recipFName + " " + this.user.recipLName
     } else {
       this.nameUser = this.user.name
     }
+
     window.GorgiasChat.close()
   },
 }
@@ -300,7 +361,21 @@ export default {
   flex-grow: 1;
   overflow: auto;
 }
+.storyletter {
+  background: transparent;
+  padding: 15px;
+  margin-bottom: 20px;
+  color: white;
 
+  width: 65%;
+  border: none;
+}
+.sotryletter-container {
+  width: 100%;
+  padding: 12px;
+  border-radius: 100px;
+  border: solid 1px rgba(255, 255, 255, 0.2);
+}
 .nav-item {
   margin-bottom: 44px;
   color: white;

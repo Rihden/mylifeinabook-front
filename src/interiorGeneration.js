@@ -47,38 +47,33 @@ async function generateBook(book, bookStyles) {
       ])
     }
 
-    for (let index = 0; index < book.chapters.length; index++) {
-      console.log("hek ddddddd")
-
-      const chapter = book.chapters[index]
+    try {
+      const chapter = book.chapters[0]
       if (chapter?.answeredStoriesCount > 0 && chapter?.isActive) {
         const newPage = await pdfDoc.addPage([
           pageWidth * DISTANCE_PER_MM,
           pageHeight * DISTANCE_PER_MM,
         ])
         const chapterPageHeight = pageHeight * DISTANCE_PER_MM
-        try {
-          await drawCenteredParagraph(chapter.title, {
-            fontSize: chapterTitleText.fontSize,
-            lineHeight: chapterTitleText.lineHeight,
-            color: chapterTitleText.color,
-            maxWidth: chapterTitleText.maxWidth * DISTANCE_PER_MM,
-            font: ptSerifFontBold,
-            offsetY: chapterPageHeight / 2,
-            page: newPage,
-          })
-
-          await generateChapter(chapter.stories, {
-            ptSerifFontItalic,
-            ptSerifFontBold,
-            ptSerifFontRegular,
-            ornamentImage,
-            doc: pdfDoc,
-          })
-        } catch (err) {
-          console.log("error", err)
-        }
+        await drawCenteredParagraph(chapter.title, {
+          fontSize: chapterTitleText.fontSize,
+          lineHeight: chapterTitleText.lineHeight,
+          color: chapterTitleText.color,
+          maxWidth: chapterTitleText.maxWidth * DISTANCE_PER_MM,
+          font: ptSerifFontBold,
+          offsetY: chapterPageHeight / 2,
+          page: newPage,
+        })
+        await generateChapter(chapter.stories, {
+          ptSerifFontItalic,
+          ptSerifFontBold,
+          ptSerifFontRegular,
+          ornamentImage,
+          doc: pdfDoc,
+        })
       }
+    } catch (error) {
+      console.log("errrr", error)
     }
 
     const pdfBytes = await pdfDoc.save()
@@ -107,11 +102,15 @@ async function generateChapter(stories, options) {
     })
   }
 }
+const decodeHtmlCharCodes = (str) => {
+  let stro = String(str).replaceAll("'", "’")
+  stro = String(str).replaceAll('"', "“")
+  return stro
+}
 
 async function generateStory(content, options) {
   try {
     if (content.isAnswered === false) return
-
     //CHANGE
     const currentPage = await addPage(options.doc, {
       font: options.font,
@@ -122,7 +121,6 @@ async function generateStory(content, options) {
       pageWidth,
     })
     // Embed story Image
-
     //Draw story title
     let nextCoordinate
     if (content.title) {
@@ -137,6 +135,7 @@ async function generateStory(content, options) {
         page: currentPage,
       })
     }
+
     //Draw Ornament
     nextCoordinate = await drawOrnament(options.ornamentImage, {
       offsetY: nextCoordinate.offsetY,
@@ -145,8 +144,10 @@ async function generateStory(content, options) {
 
     //Draw story paragraphs one at a time
     const paragraphs = content.textContent.split(/\n/)
+
     for (let i = 0; i < paragraphs.length; i++) {
-      nextCoordinate = await drawInteriorJustifiedParagraph(paragraphs[i], {
+      const formatParagraph = decodeHtmlCharCodes(paragraphs[i])
+      nextCoordinate = await drawInteriorJustifiedParagraph(formatParagraph, {
         offsetY: nextCoordinate.offsetY,
         font: options.font,
         page: nextCoordinate.currentPage,
