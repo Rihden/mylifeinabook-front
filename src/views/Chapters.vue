@@ -1480,9 +1480,9 @@ export default {
     },
     showStoryForm: async function (event, keyStories, options) {
       if (
-        (!event.target.classList.contains("question-control") &&
-          !this.selectedChapter.stories[keyStories].editingTitle) ||
-        (options && options.noClick)
+        (!event?.target?.classList?.contains("question-control") &&
+          !this?.selectedChapter?.stories[keyStories]?.editingTitle) ||
+        (options && options?.noClick)
       ) {
         try {
           if (options && options.noClick) {
@@ -1494,9 +1494,7 @@ export default {
           this.loading = true
 
           const result = await axios.get(
-            serverUrl +
-              "/api/stories/" +
-              this.selectedChapter.stories[keyStories]._id,
+            serverUrl + "/api/stories/" + keyStories,
             { withCredentials: true }
           )
           if (result.status == 200) {
@@ -2108,7 +2106,6 @@ export default {
       this.showingOverlay = false
       this.loading = false
       this.selectedChapter = this.chapters[0]
-
       const story = this.selectedChapter?.stories?.find(
         (stro) => stro?._id == this.defaultQuestion
       )

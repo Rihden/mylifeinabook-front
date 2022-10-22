@@ -154,7 +154,6 @@ async function generateStory(content, options) {
         isLastParagraph: i == paragraphs.length - 1,
       })
     }
-    console.log("helleo5")
 
     //Draw story Image
     if (content.imageBase64) {
