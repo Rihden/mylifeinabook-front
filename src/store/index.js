@@ -180,11 +180,6 @@ const store = new Vuex.Store({
         const bookId = context.state.user?.defaultBookId
           ? context.state.user.defaultBookId
           : context.state.user.bookId
-        console.log(
-          "context.state.user?.defaultBookId",
-          context.state.user?.defaultBookId
-        )
-        console.log("fetchPopulatedChapters", bookId)
         if (bookId) {
           axios
             .get(serverUrl + "/api/books/" + bookId + "?populated=true", {

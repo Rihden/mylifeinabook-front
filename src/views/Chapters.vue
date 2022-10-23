@@ -1244,7 +1244,6 @@ export default {
 
     //stories
     toggleHidingStandard: function () {
-      console.log(this.selectedChapter.isHidingStandardStories)
       this.selectedChapter.isHidingStandardStories =
         !this.selectedChapter.isHidingStandardStories
       this.selectedPaginationIndex = 0
@@ -1304,7 +1303,6 @@ export default {
       this.selectedChapter.stories[keyStories].editingTitle = true
       this.isEditingNewQuestion = true
       this.showingEditQuestionOverlay = true
-      //console.log("eeee")
 
       this.cancelNewStory()
       const refName = "title" + this.selectedChapterIndex + "-" + keyStories
@@ -1482,8 +1480,8 @@ export default {
     },
     showStoryForm: async function (event, keyStories, options) {
       if (
-        (!event.target.classList.contains("question-control") &&
-          !this.selectedChapter.stories[keyStories].editingTitle) ||
+        (!event?.target?.classList?.contains("question-control") &&
+          !this?.selectedChapter?.stories[keyStories]?.editingTitle) ||
         (options && options.noClick)
       ) {
         try {
@@ -1589,7 +1587,7 @@ export default {
               } else {
                 compRatio = 1
               }
-              console.log(Number(compRatio))
+              console.log(compRatio)
               const imageData = canvas.toDataURL("image/jpeg")
               this.selectedStory.imageBase64 = imageData
               this.selectedStory.imageFileName = file.name
@@ -2121,7 +2119,11 @@ export default {
           await this.selectChapter(null, this.defaultChapter, {
             noClick: true,
           })
-          await this.showStoryForm(null, this.defaultQuestion, {
+          const searchedStory = this.selectedChapter.stories.find(
+            (stor) => stor._id === this.defaultQuestion
+          )
+          const indexStory = this.selectedChapter.stories.indexOf(searchedStory)
+          await this.showStoryForm(null, indexStory, {
             noClick: true,
             onmount: this.defaultQuestion == 0 ? false : true,
           })

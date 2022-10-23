@@ -175,6 +175,7 @@ export default {
   background-color: #14473c;
   text-align: center;
   display: flex;
+  flex-wrap: wrap;
   color: white;
   text-transform: uppercase;
   margin-bottom: 10px;
@@ -183,6 +184,7 @@ export default {
   font-size: 24px;
   font-weight: 500;
 }
+
 .guest-container {
   width: 100%;
   margin: auto;
@@ -190,7 +192,9 @@ export default {
   margin-bottom: 50px;
   text-align: center;
   display: flex;
+  flex-wrap: wrap;
 }
+
 .guest-name.selected {
   border: 3px solid rgba(225, 80, 75, 1);
 }
