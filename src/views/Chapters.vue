@@ -1482,7 +1482,7 @@ export default {
       if (
         (!event?.target?.classList?.contains("question-control") &&
           !this?.selectedChapter?.stories[keyStories]?.editingTitle) ||
-        (options && options?.noClick)
+        (options && options.noClick)
       ) {
         try {
           if (options && options.noClick) {
@@ -1494,7 +1494,9 @@ export default {
           this.loading = true
 
           const result = await axios.get(
-            serverUrl + "/api/stories/" + keyStories,
+            serverUrl +
+              "/api/stories/" +
+              this.selectedChapter.stories[keyStories]._id,
             { withCredentials: true }
           )
           if (result.status == 200) {
@@ -2116,7 +2118,11 @@ export default {
           await this.selectChapter(null, this.defaultChapter, {
             noClick: true,
           })
-          await this.showStoryForm(null, this.defaultQuestion, {
+          const searchedStory = this.selectedChapter.stories.find(
+            (stor) => stor._id === this.defaultQuestion
+          )
+          const indexStory = this.selectedChapter.stories.indexOf(searchedStory)
+          await this.showStoryForm(null, indexStory, {
             noClick: true,
             onmount: this.defaultQuestion == 0 ? false : true,
           })
