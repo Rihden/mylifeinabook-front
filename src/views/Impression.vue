@@ -259,8 +259,8 @@
                 <button
                   class="confirm-impression-btn ptr"
                   @click="startConfirmingPrint()"
-                  :class="{ disabled: user.printStatus != 'writing' }"
-                  :disabled="user.printStatus != 'writing'"
+                  :class="{ disabled: printStatus != 'writing' }"
+                  :disabled="printStatus != 'writing'"
                 >
                   CONFIRM PRINTING
                 </button>
@@ -296,8 +296,8 @@
                 <button
                   class="confirm-impression-btn ptr"
                   @click="startConfirmingPrint()"
-                  :class="{ disabled: user.printStatus != 'writing' }"
-                  :disabled="user.printStatus != 'writing'"
+                  :class="{ disabled: printStatus != 'writing' }"
+                  :disabled="printStatus != 'writing'"
                 >
                   CONFIRM PRINTING
                 </button>
@@ -354,6 +354,7 @@ export default {
       adressSaved: false,
       successSaved: false,
       quantity: "",
+      printStatus: "writing",
     }
   },
   methods: {
@@ -365,7 +366,6 @@ export default {
       this.zipCodeError = false
       this.successSaved = false
       this.errorMessage1 = ""
-      console.log("this.adressName", this.adressName)
       if (this.adressName === "" || !this.adressName) {
         this.nameError = true
         this.$refs.nameInput.focus()
@@ -406,13 +406,21 @@ export default {
     },
     goToNextStep: function () {
       if (this.validateStep1() && this.adressSaved) {
+        let orderUser = this.user
+        if (!this.isPrincipalOrder) {
+          const story = this.user?.listOrders?.find(
+            (sto) => sto.bookId === this.user?.defaultBookId
+          )
+          const indexStory = this.user.listOrders?.indexOf(story)
+          orderUser = this.user.listOrders[indexStory]
+        }
         if (
-          this.city !== this.user?.city ||
-          this.adressName !== this.user?.adressName ||
-          this.country !== this.user?.country ||
-          this.state !== this.user?.state ||
-          this.zipCode !== this.user?.zipCode ||
-          this.streetLine1 !== this.user?.streetLine1
+          this.city !== orderUser?.city ||
+          this.adressName !== orderUser?.adressName ||
+          this.country !== orderUser?.country ||
+          this.state !== orderUser?.state ||
+          this.zipCode !== orderUser?.zipCode ||
+          this.streetLine1 !== orderUser?.streetLine1
         ) {
           this.errorMessage1 =
             "You should save your adress before proceeding to the next step"
@@ -435,18 +443,32 @@ export default {
     },
     saveShippingAdress: async function () {
       const isvalid = this.validateStep1()
-      console.log("test", isvalid)
+
       try {
         if (isvalid) {
+          if (this.isPrincipalOrder) {
+            this.user.updateBoth = true
+            this.user.adressName = this.adressName
+            this.user.country = this.country
+            this.user.streetLine1 = this.streetLine1
+            this.user.city = this.city
+            this.user.state = this.state
+            this.user.zipCode = this.zipCode
+          } else {
+            const book = this.user?.listOrders?.find(
+              (sto) => sto.bookId === this.user?.defaultBookId
+            )
+            const indexStory = this.user.listOrders?.indexOf(book)
+            this.user.listOrders[indexStory].updateBoth = true
+            this.user.listOrders[indexStory].adressName = this.adressName
+            this.user.listOrders[indexStory].country = this.country
+            this.user.listOrders[indexStory].streetLine1 = this.streetLine1
+            this.user.listOrders[indexStory].city = this.city
+            this.user.listOrders[indexStory].state = this.state
+            this.user.listOrders[indexStory].zipCode = this.zipCode
+          }
           this.errorMessage1 = ""
           this.successSaved = false
-          this.user.updateBoth = true
-          this.user.adressName = this.adressName
-          this.user.country = this.country
-          this.user.streetLine1 = this.streetLine1
-          this.user.city = this.city
-          this.user.state = this.state
-          this.user.zipCode = this.zipCode
           this.loading = true
           this.showingOverlay = true
           const response = await axios.put(
@@ -473,9 +495,6 @@ export default {
         this.successSaved = false
       }
     },
-    doSmth: function () {
-      console.log(this.book)
-    },
     startConfirmingPrint: function () {
       this.confirmingPrint = true
       this.showingOverlay = true
@@ -495,7 +514,16 @@ export default {
           { withCredentials: true }
         )
         if (response.status == 200) {
-          this.user.printStatus = "pending"
+          if (this.isPrincipalOrder) {
+            this.user.printStatus = "pending"
+          } else {
+            const book = this.user?.listOrders?.find(
+              (sto) => sto.bookId === this.user?.defaultBookId
+            )
+            const indexStory = this.user.listOrders?.indexOf(book)
+            this.user.listOrders[indexStory].printStatus = "pending"
+          }
+          this.printStatus = "pending"
           this.loading = false
           this.showingOverlay = false
         }
@@ -549,17 +577,48 @@ export default {
     user: function () {
       return this.$store.getters.getUser
     },
+    isPrincipalOrder: function () {
+      return (
+        this.user?.bookId === this.user?.defaultBookId ||
+        !this.user?.defaultBookId
+      )
+    },
   },
   created() {
-    this.adressName = this.user?.adressName
-    this.country = this.user?.country ? this.user?.country : "country"
-    this.streetLine1 = this.user?.streetLine1
-    this.city = this.user?.city
-    this.state = this.user?.state
-    this.zipCode = this.user?.zipCode
-    this.quantity = this?.user?.quantity ? this?.user?.quantity : 1
-    if (this.user?.streetLine1) {
-      this.adressSaved = true
+    if (this.isPrincipalOrder) {
+      this.adressName = this.user?.adressName
+      this.country = this.user?.country ? this.user?.country : "country"
+      this.streetLine1 = this.user?.streetLine1
+      this.city = this.user?.city
+      this.state = this.user?.state
+      this.zipCode = this.user?.zipCode
+      this.quantity = this?.user?.quantity ? this?.user?.quantity : 1
+      if (this.user?.streetLine1) {
+        this.adressSaved = true
+      }
+      this.printStatus = this.user.printStatus
+    } else {
+      const story = this.user?.listOrders?.find(
+        (sto) => sto.bookId === this.user?.defaultBookId
+      )
+      const indexStory = this.user.listOrders?.indexOf(story)
+      this.adressName = this.user.listOrders[indexStory].adressName
+      this.country = this.user.listOrders[indexStory]?.country
+        ? this.user.listOrders[indexStory]?.country
+        : "country"
+      this.streetLine1 = this.user.listOrders[indexStory]?.streetLine1
+      this.city = this.user.listOrders[indexStory]?.city
+      this.state = this.user.listOrders[indexStory]?.state
+      this.zipCode = this.user.listOrders[indexStory]?.zipCode
+      this.quantity = this.user.listOrders[indexStory]?.quantity
+        ? this.user.listOrders[indexStory]?.quantity
+        : 1
+      if (this.user.listOrders[indexStory]?.streetLine1) {
+        this.adressSaved = true
+      }
+      this.printStatus = this.user.listOrders[indexStory]?.printStatus
+        ? this.user.listOrders[indexStory]?.printStatus
+        : "writing"
     }
   },
 }

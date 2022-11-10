@@ -61,6 +61,7 @@
             :class="{ expanded: isExpanded }"
             :style="computedStyles"
             style="margin-bottom: 20px"
+            v-if="listOrders.length > 1"
           >
             <div class="dropdown-label-container">
               <div class="dropdown-label">
@@ -239,7 +240,7 @@
       <div v-if="listOrders.length > 1" @click="showingOverlay = true">
         <span>Storyteller</span>
       </div>
-      <hr class="hr-menu" />
+      <hr class="hr-menu" v-if="listOrders.length > 1" />
       <router-link to="/" v-if="admin != 'true'">
         <span @click="reloadChapters()">Questions</span>
       </router-link>

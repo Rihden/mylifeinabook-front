@@ -754,6 +754,7 @@ export default {
       showingEditQuestionOverlay: false,
       startDraggingStorie: {},
       finshDragginStorie: {},
+      canShare: false,
     }
   },
   methods: {
@@ -1818,7 +1819,11 @@ export default {
         await this.selectChapter(null, this.defaultChapter, {
           noClick: true,
         })
-        await this.showStoryForm(null, this.defaultQuestion, {
+        const searchedStory = this.selectedChapter.stories.find(
+          (stor) => stor._id === this.defaultQuestion
+        )
+        const indexStory = this.selectedChapter.stories.indexOf(searchedStory)
+        await this.showStoryForm(null, indexStory, {
           noClick: true,
           onmount: this.defaultQuestion == 0 ? false : true,
         })
@@ -1832,6 +1837,20 @@ export default {
       this.cancelNewStory()
       if (this.questionID) {
         this.$router.replace("/stories")
+      }
+      if (this.user?.nbrOrders > 1) {
+        const book = this.user?.listOrders?.find(
+          (sto) => sto.bookId === this.user.defaultBookId
+        )
+        const indexStory = this.user.listOrders?.indexOf(book)
+        this.canShare =
+          this.user.listOrders[indexStory].isBuyer === 0 ||
+          (this.user.listOrders[indexStory].isBuyer === 1 &&
+            this.user.listOrders[indexStory].guest != 1)
+      } else {
+        this.canShare =
+          this.user.isBuyer === 0 ||
+          (this.user.isBuyer === 1 && this.user.guest != 1)
       }
     } catch (error) {
       console.log(error)
