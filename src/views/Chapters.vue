@@ -1179,7 +1179,14 @@ export default {
       }
     },
     selectChapter: async function (event, id, options) {
-      this.nextDateTosend = this.user.lastQuestionsent
+      //this.nextDateTosend = this.user.lastQuestionsent
+      this.lastQuestionsent = this.user?.lastQuestionsent
+        ? this.user?.lastQuestionsent
+        : dayjs().format("MM/DD/YYYY")
+      this.nextDateTosend =
+        dayjs(this.lastQuestionsent).diff(dayjs(this.user?.recipGiftDate)) > 0
+          ? this.lastQuestionsent
+          : this.user?.recipGiftDate
       if (
         !(
           (event && event.target.classList.contains("chapter-control")) ||
@@ -1944,10 +1951,13 @@ export default {
           } else {
             diffDay = 7 - diffDay
           }
-          nexSentDate = dayjs(this.nextDateTosend)?.add(
-            diffDay.toString(),
-            "day"
-          )
+          if (!first && !this.user.lastQuestionsent) {
+            nexSentDate = dayjs(this.nextDateTosend)?.add(
+              diffDay.toString(),
+              "day"
+            )
+          }
+
           break
         case 3:
           if (
@@ -2160,7 +2170,10 @@ export default {
     this.lastQuestionsent = this.user?.lastQuestionsent
       ? this.user?.lastQuestionsent
       : dayjs().format("MM/DD/YYYY")
-    this.nextDateTosend = this.lastQuestionsent
+    this.nextDateTosend =
+      dayjs(this.lastQuestionsent).diff(dayjs(this.user?.recipGiftDate)) > 0
+        ? this.lastQuestionsent
+        : this.user?.recipGiftDate
     this.displayDate =
       this.user.guest == 1 ||
       this.user.isBuyer == 0 ||
