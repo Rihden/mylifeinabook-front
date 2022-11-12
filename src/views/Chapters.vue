@@ -1179,9 +1179,13 @@ export default {
       }
     },
     selectChapter: async function (event, id, options) {
-      this.nextDateTosend = this.user.lastQuestionsent
-        ? this.user.lastQuestionsent
+      this.lastQuestionsent = this.user?.lastQuestionsent
+        ? this.user?.lastQuestionsent
         : dayjs().format("MM/DD/YYYY")
+      this.nextDateTosend =
+        dayjs(this.lastQuestionsent).diff(dayjs(this.user?.recipGiftDate)) > 0
+          ? this.lastQuestionsent
+          : this.user?.recipGiftDate
       if (
         !(
           (event && event.target.classList.contains("chapter-control")) ||
@@ -1206,6 +1210,7 @@ export default {
             chapter.stories.forEach((story, storyIndex) => {
               if (!story.notifSent && !story.isAnswered) {
                 if (storyIndex === 0) {
+                  console.log("uistor")
                   story.sentDate = this.getNexDateQuestion(true)
                 } else {
                   story.sentDate = this.getNexDateQuestion()
@@ -1325,6 +1330,7 @@ export default {
               this.selectedChapter.stories[keyStories]._id
           )
           const story = result.data
+          story.user = this.user
           story.question = tempTitle
           const result2 = await axios.put(serverUrl + "/api/stories/", story, {
             withCredentials: true,
@@ -1383,6 +1389,7 @@ export default {
           imageFileName: "",
           lastUpdated: new Date(),
           pagesCount: 0,
+          user: this.user,
         }
         const result = await axios.post(serverUrl + "/api/stories/", newStory, {
           withCredentials: true,
@@ -1732,6 +1739,7 @@ export default {
       }
     },
     saveAnswer: async function () {
+      console.log("hello")
       try {
         const story = this.selectedStory
         story.imageCaption = story.imageCaption.replaceAll("\n", "")
@@ -1788,6 +1796,7 @@ export default {
               imageCaption,
               lastUpdated,
               pagesCount,
+              user: this.user,
             },
             { withCredentials: true }
           )
@@ -1944,10 +1953,13 @@ export default {
           } else {
             diffDay = 7 - diffDay
           }
-          nexSentDate = dayjs(this.nextDateTosend)?.add(
-            diffDay.toString(),
-            "day"
-          )
+          if (!first || !this.user.lastQuestionsent) {
+            nexSentDate = dayjs(this.nextDateTosend)?.add(
+              diffDay.toString(),
+              "day"
+            )
+          }
+          console.log(first, this.user.lastQuestionsent)
           break
         case 3:
           if (
@@ -2161,7 +2173,10 @@ export default {
     this.lastQuestionsent = this.user?.lastQuestionsent
       ? this.user?.lastQuestionsent
       : dayjs().format("MM/DD/YYYY")
-    this.nextDateTosend = this.lastQuestionsent
+    this.nextDateTosend =
+      dayjs(this.lastQuestionsent).diff(dayjs(this.user?.recipGiftDate)) > 0
+        ? this.lastQuestionsent
+        : this.user?.recipGiftDate
     this.displayDate =
       this.user.guest == 1 ||
       this.user.isBuyer == 0 ||

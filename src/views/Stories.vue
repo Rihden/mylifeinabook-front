@@ -1203,6 +1203,7 @@ export default {
               this.selectedChapter.stories[keyStories]._id
           )
           const story = result.data
+          story.user = this.user
           story.question = tempTitle
           const result2 = await axios.put(serverUrl + "/api/stories/", story, {
             withCredentials: true,
@@ -1638,6 +1639,7 @@ export default {
               imageCaption,
               lastUpdated,
               pagesCount,
+              user: this.user,
             },
             { withCredentials: true }
           )

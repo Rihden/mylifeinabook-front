@@ -457,7 +457,7 @@
                   <div>
                     <div class="visitors-list" style="margin-bottom: 15px">
                       <div
-                        v-for="(visitor, indexvisitor) in visitors"
+                        v-for="(visitor, indexvisitor) in user.visitors"
                         :key="indexvisitor"
                         class="ptr"
                       >
