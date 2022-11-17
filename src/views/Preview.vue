@@ -69,54 +69,6 @@ export default {
         )
         const bookStyles = { ornament }
         const book = JSON.parse(JSON.stringify(result.data))
-        //sort stories inside each chapter
-        /* book.chapters.forEach((chapter, chapterIndex) => {
-          let orderedStories = []
-          chapter.answeredStories.forEach((id) => {
-            const storyIndex = chapter.stories.findIndex(
-              (story) => id == story._id
-            )
-            if (storyIndex > -1) {
-              orderedStories.push(chapter.stories[storyIndex])
-              chapter.stories.splice(storyIndex, 1)
-            }
-          })
-          book.chapters[chapterIndex].stories =
-            chapter.stories.concat(orderedStories)
-        })
-
-        //sort chapters
-        const unorderedChapters = book.chapters
-        let orderedChapters = []
-        const chaptersOrder = book.chaptersOrder
-        if (unorderedChapters.length > 0) {
-          chaptersOrder.forEach((id) => {
-            //find index of current chapter
-            const index = unorderedChapters.findIndex((chapter) => {
-              return chapter._id == id
-            })
-            //push to ordered array
-            orderedChapters.push(unorderedChapters[index])
-          })
-        }*/
-
-        /* const resultC = await axios.get(
-          serverUrl +
-            "/api/chapters/?bkid=" +
-            this.user.bookId +
-            "&populated=stories&answered=true",
-          { withCredentials: true }
-        )
-        if (resultC.status == 200) {
-          let chapter = resultC.data?.chapters
-
-          chapter.stories = resultC.data?.stories
-
-          const orderedChapters = JSON.parse(JSON.stringify(chapter))
-
-          book.chapters = [orderedChapters]
-        }*/
-        //book.chapters = orderedChapters
         const resultBookStats = await axios.get(
           serverUrl + "/api/books/stats/" + bookId,
           { withCredentials: true }

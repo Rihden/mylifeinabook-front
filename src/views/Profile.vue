@@ -1046,10 +1046,12 @@ export default {
         "DD/MM/YYYY"
       )
       this.giftMessage = this.userOrder.giftMessage
+      this.recipEmail = this.userOrder.recipEmail
     } else {
       this.mailFrequence = this.user.mailFrequence
       this.recipGiftDate = dayjs(this.user.recipGiftDate).format("DD/MM/YYYY")
       this.giftMessage = this.user.giftMessage
+      this.recipEmail = this.user.recipEmail
     }
   },
 }

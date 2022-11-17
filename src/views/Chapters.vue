@@ -1739,7 +1739,6 @@ export default {
       }
     },
     saveAnswer: async function () {
-      console.log("hello")
       try {
         const story = this.selectedStory
         story.imageCaption = story.imageCaption.replaceAll("\n", "")
@@ -1959,7 +1958,6 @@ export default {
               "day"
             )
           }
-          console.log(first, this.user.lastQuestionsent)
           break
         case 3:
           if (

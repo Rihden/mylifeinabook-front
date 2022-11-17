@@ -1,5 +1,4 @@
 import {
-  drawCenteredParagraph,
   drawInteriorJustifiedParagraph,
   drawInteriorCenteredParagraph,
   drawStoryImage,
@@ -15,7 +14,6 @@ import {
   pageWidth,
   pagePaddingBottom,
   paginationFontSize,
-  chapterTitleText,
   textColor,
 } from "./bookStyling"
 
@@ -50,20 +48,6 @@ async function generateBook(book, bookStyles) {
     try {
       const chapter = book.chapters[0]
       if (chapter?.answeredStoriesCount > 0 && chapter?.isActive) {
-        const newPage = await pdfDoc.addPage([
-          pageWidth * DISTANCE_PER_MM,
-          pageHeight * DISTANCE_PER_MM,
-        ])
-        const chapterPageHeight = pageHeight * DISTANCE_PER_MM
-        await drawCenteredParagraph(chapter.title, {
-          fontSize: chapterTitleText.fontSize,
-          lineHeight: chapterTitleText.lineHeight,
-          color: chapterTitleText.color,
-          maxWidth: chapterTitleText.maxWidth * DISTANCE_PER_MM,
-          font: ptSerifFontBold,
-          offsetY: chapterPageHeight / 2,
-          page: newPage,
-        })
         await generateChapter(chapter.stories, {
           ptSerifFontItalic,
           ptSerifFontBold,
