@@ -1208,13 +1208,16 @@ export default {
             const chapter = result.data
             chapter.tempTitle = ""
             chapter.isShowingAnswered = false
+            let i = 0
             chapter.stories.forEach((story, storyIndex) => {
-              if (!story.notifSent) {
-                if (storyIndex === 0) {
+              if (!story.notifSent && !story.isAnswered) {
+                if (i === 0) {
                   story.sentDate = this.getNexDateQuestion(true)
+                  i++
                 } else {
                   story.sentDate = this.getNexDateQuestion()
                 }
+                console.log("story", story)
               }
 
               story.editingTitle = false
@@ -1951,12 +1954,10 @@ export default {
           } else {
             diffDay = 7 - diffDay
           }
-          if (!first && !this.user.lastQuestionsent) {
-            nexSentDate = dayjs(this.nextDateTosend)?.add(
-              diffDay.toString(),
-              "day"
-            )
-          }
+          nexSentDate = dayjs(this.nextDateTosend)?.add(
+            diffDay.toString(),
+            "day"
+          )
 
           break
         case 3:
