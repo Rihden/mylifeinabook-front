@@ -1,5 +1,47 @@
 <template>
   <div>
+    <div class="overlay" v-if="showingOverlay">
+      <div class="pop-up d-flex-centered d-col">
+        <div class="pop-up-title">
+          <span>Choose an account</span>
+        </div>
+        <div class="pop-up-paragraph">
+          <div
+            class="dropdown"
+            @click="toggleRiskLevels"
+            :class="{ expanded: isExpanded }"
+            :style="computedStyles"
+          >
+            <div class="dropdown-label-container">
+              <div class="dropdown-label">
+                <span class="text">
+                  {{ placeholder }}
+                </span>
+                <i class="angle-down" :class="{ toggled: isExpanded }"></i>
+              </div>
+            </div>
+
+            <div v-expand="isExpanded" class="options expand">
+              <div
+                v-for="order in listOrders"
+                :key="order.bookId"
+                class="option"
+                @click="setNewSelectedOption(order)"
+              >
+                {{
+                  order.recipFName
+                    ? order.recipFName + " " + order.recipLName
+                    : order.name
+                }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-if="loading">
+        <div class="lds-dual-ring"></div>
+      </div>
+    </div>
     <div class="navbar">
       <div class="col-navbar d-col">
         <div class="">
@@ -13,6 +55,36 @@
           </router-link>
         </div>
         <div class="nav-items-container">
+          <div
+            class="dropdown"
+            @click="toggleRiskLevels"
+            :class="{ expanded: isExpanded }"
+            :style="computedStyles"
+            style="margin-bottom: 20px"
+            v-if="listOrders.length > 1"
+          >
+            <div class="dropdown-label-container">
+              <div class="dropdown-label">
+                <span class="text"> {{ placeholder }} </span>
+                <i class="angle-down" :class="{ toggled: isExpanded }"></i>
+              </div>
+            </div>
+
+            <div v-expand="isExpanded" class="options expand">
+              <div
+                v-for="order in listOrders"
+                :key="order.bookId"
+                class="option"
+                @click="setNewSelectedOption(order)"
+              >
+                {{
+                  order.recipFName
+                    ? order.recipFName + " " + order.recipLName
+                    : order.name
+                }}
+              </div>
+            </div>
+          </div>
           <router-link to="/" v-if="admin != 'true'"
             ><div class="nav-item" @click="reloadChapters()">
               <span>Questions</span>
@@ -165,6 +237,10 @@
         isOpenMenu: !isMenuOpen,
       }"
     >
+      <div v-if="listOrders.length > 1" @click="showingOverlay = true">
+        <span>Storyteller</span>
+      </div>
+      <hr class="hr-menu" v-if="listOrders.length > 1" />
       <router-link to="/" v-if="admin != 'true'">
         <span @click="reloadChapters()">Questions</span>
       </router-link>
@@ -205,24 +281,84 @@ import { Slide } from "vue-burger-menu"
 import Vue from "vue"
 import VueMobileDetection from "vue-mobile-detection"
 Vue.use(VueMobileDetection)
-
-/*import VueGorgias from "vue-gorgias"
-Vue.use(VueGorgias, {
-  apiKey: "22dd57dfcd51ab5d2088a8b766db6585ca6fc890e42871048ca48016c50f95af",
-  chatId: "45195",
-})*/
-
-//import ChaptersVue from "../views/Chapters.vue"
 export default {
   props: ["admin"],
   data() {
     return {
       nameUser: "",
       isMenuOpen: false,
+      selectedBook: "",
+      showingOverlay: false,
+      placeholder: "",
+      listOrders: [],
+      config: {
+        backgroundColor: "transparent",
+        textColor: "black",
+        borderRadius: "1.5em",
+        border: "1px solid gray",
+        width: 180,
+      },
+      optionsHeight: 0,
+      optionHeight: 35,
+      width: "100%",
+      backgroundColor: "transparent",
+      backgroundExpandedColor: "#fff",
+      hoverBackgroundColor: "rgba(6, 42, 32, 0.1)",
+      border: "1px solid rgba(6, 42, 32, 0.2)",
+      borderRadius: "24px",
+      textColor: "rgba(20, 71, 60, 1)",
+      isExpanded: false,
     }
   },
   components: { Slide },
+  computed: {
+    computedStyles: function () {
+      return [
+        { "--options-height": this.optionsHeight + "px" },
+        { "--options-height-neg": "-" + this.optionsHeight + "px" },
+        { "--option-height": this.optionHeight + "px" },
+        { "--main-el-border-radius": this.borderRadius },
+        { "--dropdown-width": this.width },
+        { "--dropdown-background-color": this.backgroundColor },
+        { "--dropdown-expanded-color": this.backgroundExpandedColor },
+        { "--dropdown-border": this.border },
+        { "--dropdown-hover-background-color": this.hoverBackgroundColor },
+        { "--dropdown-default-text-color": this.textColor },
+      ]
+    },
+    user: function () {
+      return this.$store.getters.getUser
+    },
+  },
+  directives: {
+    expand: {
+      inserted: function (el, binding) {
+        function calcHeight() {
+          const currentState = el.getAttribute("aria-expanded")
+          el.classList.add("u-no-transition")
+          el.removeAttribute("aria-expanded")
+          el.style.height = null
+          el.style.height = el.clientHeight + "px"
+          el.setAttribute("aria-expanded", currentState)
 
+          setTimeout(function () {
+            el.classList.remove("u-no-transition")
+          })
+        }
+        if (binding.value !== null) {
+          el.classList.add("expand")
+          el.setAttribute("aria-expanded", binding.value ? "true" : "false")
+          calcHeight(el)
+          window.addEventListener("resize", calcHeight)
+        }
+      },
+      update: function (el, binding) {
+        if (el.style.height && binding.value !== null) {
+          el.setAttribute("aria-expanded", binding.value ? "true" : "false")
+        }
+      },
+    },
+  },
   methods: {
     reloadChapters: async function () {
       if (this.$route.path === "/") {
@@ -242,6 +378,18 @@ export default {
     },
     gorgiasChatOpen: function () {
       window.GorgiasChat.open()
+    },
+    onChange: async function () {
+      this.user.defaultBookId = this.selectedBook
+      const response = await axios.put(serverUrl + "/api/users/", this.user, {
+        withCredentials: true,
+      })
+      if (response.status == 200) {
+        this.$store.commit("setUser", response.data)
+        await this.$store.dispatch("fetchPopulatedChapters")
+        window.location.reload()
+        console.log(response.data)
+      }
     },
     logout: async function () {
       if (this.user) {
@@ -265,22 +413,62 @@ export default {
         }
       }
     },
-  },
-  computed: {
-    user: function () {
-      return this.$store.getters.getUser
+    setNewSelectedOption(selectedOption) {
+      this.selectedBook = selectedOption?.bookId
+      this.nameUser = selectedOption.recipFName
+        ? selectedOption.recipFName + " " + selectedOption.recipLName
+        : selectedOption.name
+      this.onChange()
+    },
+    toggleRiskLevels() {
+      this.isExpanded = !this.isExpanded
+    },
+    setNameUser() {
+      if (
+        this.user?.bookId === this.user?.defaultBookId ||
+        !this.user?.defaultBookId
+      ) {
+        if (this.user.guest == 1) {
+          this.nameUser = this.user.recipFName + " " + this.user.recipLName
+        } else {
+          this.nameUser = this.user.name
+        }
+      } else {
+        const orderUser = this.user?.listOrders?.find(
+          (order) => order?.bookId === this?.user?.defaultBookId
+        )
+        if (orderUser.guest == 1) {
+          this.nameUser = orderUser.recipFName + " " + orderUser.recipLName
+        } else {
+          this.nameUser = orderUser.name
+        }
+      }
+      this.placeholder = this.nameUser.split(" ")[0]
     },
   },
   created() {
-    if (this.user.guest == 1) {
-      this.nameUser = this.user.recipFName + " " + this.user.recipLName
-    } else {
-      this.nameUser = this.user.name
-    }
+    this.selectedBook = this.user.defaultBookId
+    this.listOrders = [
+      {
+        bookId: this.user.bookId,
+        recipLName: this.user.recipLName,
+        recipFName: this.user.recipFName,
+        name: this.user.name,
+      },
+    ]
+    this.user.listOrders?.map((order) => {
+      if (order && Object.keys(order).length > 0 && order.bookId) {
+        this.listOrders.push(order)
+      }
+    })
+    this.setNameUser()
     window.GorgiasChat.close()
   },
 }
 </script>
+<style lang="css" scoped>
+@import "./vue-dropdown/vue-dropdown.css";
+</style>
 <style>
 .navbar {
   width: 224px;
@@ -300,7 +488,21 @@ export default {
   flex-grow: 1;
   overflow: auto;
 }
+.storyletter {
+  background: transparent;
+  padding: 15px;
+  margin-bottom: 20px;
+  color: white;
 
+  width: 65%;
+  border: none;
+}
+.sotryletter-container {
+  width: 100%;
+  padding: 12px;
+  border-radius: 100px;
+  border: solid 1px rgba(255, 255, 255, 0.2);
+}
 .nav-item {
   margin-bottom: 44px;
   color: white;

@@ -15,7 +15,7 @@
             class="gift-title-input-overlay chapter-control"
             type="text"
             v-model="recipEmail"
-            :placeholder="user.recipEmail"
+            :placeholder="recipEmail"
             @keypress.enter="confirmEditingGift('recipEmail')"
             :ref="recipEmail"
           />
@@ -131,12 +131,12 @@
                         type="text"
                         v-if="action == 'recipEmail'"
                         v-model="recipEmail"
-                        :placeholder="user.recipEmail"
+                        :placeholder="recipEmail"
                         @keypress.enter="confirmEditingGift('recipEmail')"
                         :ref="recipEmail"
                       />
                       <span v-if="action != 'recipEmail'" class="gift-title"
-                        >{{ user.recipEmail }}
+                        >{{ recipEmail }}
                       </span>
                       <img
                         @click="startEditingTitle('recipEmail')"
@@ -238,7 +238,7 @@
                         v-if="action != 'giftMessage'"
                         class="gift-title"
                         style="max-width: 400px"
-                        >{{ user.giftMessage }}
+                        >{{ giftMessage }}
                       </span>
                       <img
                         @click="startEditingTitle('giftMessage')"
@@ -591,7 +591,7 @@
                       class="radio-custom"
                       v-model="mailFrequence"
                       name="radio"
-                      :checked="user.mailFrequence == 1"
+                      :checked="mailFrequence == 1"
                     />
                     <span class="checkmark"></span>
                   </label>
@@ -604,7 +604,7 @@
                       class="radio-custom"
                       v-model="mailFrequence"
                       name="radio"
-                      :checked="user.mailFrequence == 2"
+                      :checked="mailFrequence == 2"
                     />
                     <span class="checkmark"></span>
                   </label>
@@ -616,7 +616,7 @@
                       value="3"
                       class="radio-custom"
                       v-model="mailFrequence"
-                      :checked="user.mailFrequence == 3"
+                      :checked="mailFrequence == 3"
                     />
                     <span class="checkmark"></span>
                   </label>
@@ -628,7 +628,7 @@
                       value="4"
                       class="radio-custom"
                       v-model="mailFrequence"
-                      :checked="user.mailFrequence == 4"
+                      :checked="mailFrequence == 4"
                     />
                     <span class="checkmark"></span>
                   </label>
@@ -640,7 +640,7 @@
                       class="radio-custom"
                       id="five"
                       v-model="mailFrequence"
-                      :checked="user.mailFrequence == 5"
+                      :checked="mailFrequence == 5"
                     />
                     <span class="checkmark"></span>
                   </label>
@@ -720,6 +720,7 @@ export default {
       visitorName: "",
       visitorEmail: "",
       mailFrequence: "",
+      visitors: [],
       savedSeeting: false,
       action: "",
       recipEmail: "",
@@ -732,6 +733,7 @@ export default {
       isEditingGiftDetails: false,
       showingEditingGiftMessage: false,
       isEditingGiftMessage: false,
+      userOrder: {},
     }
   },
   components: {
@@ -838,10 +840,18 @@ export default {
     },
     async confirmNewStory() {
       if (this.visitorEmail?.trim() !== "") {
-        this.user.visitors.push({
-          name: this.visitorName,
-          email: this.visitorEmail,
-        })
+        if (this.isPrincipalOrder) {
+          this.user.visitors.push({
+            name: this.visitorName,
+            email: this.visitorEmail,
+          })
+        } else {
+          this.user.listOrders[this.getIndexOrder].visitors.push({
+            name: this.visitorName,
+            email: this.visitorEmail,
+          })
+        }
+
         //update both user(guest and buyer)
         this.user.updateBoth = true
         const response = await axios.put(serverUrl + "/api/users/", this.user, {
@@ -869,7 +879,11 @@ export default {
       this.visitorEmail = ""
     },
     async removeRecipient(index) {
-      this.user?.visitors.splice(index, 1)
+      if (this.isPrincipalOrder) {
+        this.user?.visitors.splice(index, 1)
+      } else {
+        this.user.listOrders[this.getIndexOrder].visitors.splice(index, 1)
+      }
       this.user.updateBoth = true
       const response = await axios.put(serverUrl + "/api/users/", this.user, {
         withCredentials: true,
@@ -882,7 +896,12 @@ export default {
     },
     async confirmUpdate() {
       this.user.updateBoth = true
-      this.user.mailFrequence = this.mailFrequence
+      if (this.isPrincipalOrder) {
+        this.user.mailFrequence = this.mailFrequence
+      } else {
+        this.user.listOrders[this.getIndexOrder].mailFrequence =
+          this.mailFrequence
+      }
       const response = await axios.put(serverUrl + "/api/users/", this.user, {
         withCredentials: true,
       })
@@ -895,10 +914,23 @@ export default {
     },
     async confirmEditingGift(key) {
       this.savedSeeting = false
-      this.user[key] = this[key]
+      let giftSent = false
+      if (this.isPrincipalOrder) {
+        this.user[key] = this[key]
+        giftSent = this.user?.giftSubscriptionSent
+      } else {
+        this.user.listOrders[this.getIndexOrder][key] = this[key]
+        giftSent =
+          this.user?.listOrders[this.getIndexOrder].giftSubscriptionSent
+      }
       const mailformat = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
       this.errorStatus = { status: false, message: "" }
-      if (key === "recipEmail") {
+      if (giftSent) {
+        this.errorStatus = {
+          status: true,
+          message: "Gift Subscription already sent",
+        }
+      } else if (key === "recipEmail") {
         if (
           this.recipEmail.length > 50 ||
           !this.recipEmail.match(mailformat) ||
@@ -917,9 +949,9 @@ export default {
           }
         }
       }
-      console.log(this.errorStatus.status)
-      console.log("rrrr", this.user.recipGiftDate)
+
       if (!this.errorStatus.status) {
+        this.user.updateBoth = true
         const response = await axios.put(serverUrl + "/api/users/", this.user, {
           withCredentials: true,
         })
@@ -928,9 +960,15 @@ export default {
         if (!response.status == 200) {
           console.log(response.data)
         } else {
-          this.recipGiftDate = dayjs(this.user.recipGiftDate).format(
-            "DD/MM/YYYY"
-          )
+          if (this.isPrincipalOrder) {
+            this.recipGiftDate = dayjs(this.user.recipGiftDate).format(
+              "DD/MM/YYYY"
+            )
+          } else {
+            this.recipGiftDate = dayjs(
+              this.user.listOrders[this.getIndexOrder]?.recipGiftDate
+            ).format("DD/MM/YYYY")
+          }
           this.action = ""
           this.savedSeeting = true
         }
@@ -979,6 +1017,18 @@ export default {
     user: function () {
       return this.$store.getters.getUser
     },
+    isPrincipalOrder: function () {
+      return (
+        this.user?.bookId === this.user?.defaultBookId ||
+        !this.user?.defaultBookId
+      )
+    },
+    getIndexOrder: function () {
+      const story = this.user?.listOrders?.find(
+        (sto) => sto.bookId === this.user?.defaultBookId
+      )
+      return this.user?.listOrders?.indexOf(story)
+    },
   },
   async mounted() {
     try {
@@ -989,9 +1039,20 @@ export default {
   },
 
   created() {
-    this.mailFrequence = this.user.mailFrequence
-    this.recipGiftDate = dayjs(this.user.recipGiftDate).format("DD/MM/YYYY")
-    this.giftMessage = this.user.giftMessage
+    if (!this.isPrincipalOrder) {
+      this.userOrder = this.user.listOrders[this.getIndexOrder]
+      this.mailFrequence = this.userOrder.mailFrequence
+      this.recipGiftDate = dayjs(this.userOrder.recipGiftDate).format(
+        "DD/MM/YYYY"
+      )
+      this.giftMessage = this.userOrder.giftMessage
+      this.recipEmail = this.userOrder.recipEmail
+    } else {
+      this.mailFrequence = this.user.mailFrequence
+      this.recipGiftDate = dayjs(this.user.recipGiftDate).format("DD/MM/YYYY")
+      this.giftMessage = this.user.giftMessage
+      this.recipEmail = this.user.recipEmail
+    }
   },
 }
 </script>

@@ -628,10 +628,12 @@ export default {
     },
     getBook: async function () {
       try {
-        const result = await axios.get(
-          serverUrl + "/api/books/" + this.user.bookId,
-          { withCredentials: true }
-        )
+        const bookId = this.user?.defaultBookId
+          ? this.user?.defaultBookId
+          : this.user.bookId
+        const result = await axios.get(serverUrl + "/api/books/" + bookId, {
+          withCredentials: true,
+        })
         const book = result.data
         this.book = book
         //change into  = book.cover.content;

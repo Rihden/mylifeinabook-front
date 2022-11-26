@@ -754,6 +754,7 @@ export default {
       showingEditQuestionOverlay: false,
       startDraggingStorie: {},
       finshDragginStorie: {},
+      canShare: false,
     }
   },
   methods: {
@@ -1081,11 +1082,14 @@ export default {
         try {
           this.showingOverlay = true
           this.loading = true
-
+          const bookId = this.user?.defaultBookId
+            ? this.user?.defaultBookId
+            : this.user.bookId
+          console.log("bookId", bookId)
           const result = await axios.get(
             serverUrl +
               "/api/chapters/?bkid=" +
-              this.user.bookId +
+              bookId +
               "&populated=stories&answered=true",
             { withCredentials: true }
           )
@@ -1199,6 +1203,7 @@ export default {
               this.selectedChapter.stories[keyStories]._id
           )
           const story = result.data
+          story.user = this.user
           story.question = tempTitle
           const result2 = await axios.put(serverUrl + "/api/stories/", story, {
             withCredentials: true,
@@ -1634,6 +1639,7 @@ export default {
               imageCaption,
               lastUpdated,
               pagesCount,
+              user: this.user,
             },
             { withCredentials: true }
           )
@@ -1829,6 +1835,20 @@ export default {
       this.cancelNewStory()
       if (this.questionID) {
         this.$router.replace("/stories")
+      }
+      if (this.user?.nbrOrders > 1) {
+        const book = this.user?.listOrders?.find(
+          (sto) => sto.bookId === this.user.defaultBookId
+        )
+        const indexStory = this.user.listOrders?.indexOf(book)
+        this.canShare =
+          this.user.listOrders[indexStory].isBuyer === 0 ||
+          (this.user.listOrders[indexStory].isBuyer === 1 &&
+            this.user.listOrders[indexStory].guest != 1)
+      } else {
+        this.canShare =
+          this.user.isBuyer === 0 ||
+          (this.user.isBuyer === 1 && this.user.guest != 1)
       }
     } catch (error) {
       console.log(error)
