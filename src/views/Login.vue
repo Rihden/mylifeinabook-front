@@ -273,7 +273,6 @@ export default {
           this.$store.commit("setUser", response.data)
           this.loading = false
           this.showingOverlay = false
-          console.log(this.$router)
           if (response.data?.nbrOrders > 1) {
             const historyLocation = this.questionId
               ? `/welcome?question-id=${this.questionId}&chapter-id=${this.chapterId}`

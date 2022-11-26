@@ -1821,11 +1821,7 @@ export default {
         await this.selectChapter(null, this.defaultChapter, {
           noClick: true,
         })
-        const searchedStory = this.selectedChapter.stories.find(
-          (stor) => stor._id === this.defaultQuestion
-        )
-        const indexStory = this.selectedChapter.stories.indexOf(searchedStory)
-        await this.showStoryForm(null, indexStory, {
+        await this.showStoryForm(null, this.defaultQuestion, {
           noClick: true,
           onmount: this.defaultQuestion == 0 ? false : true,
         })

@@ -1207,11 +1207,12 @@ export default {
             const chapter = result.data
             chapter.tempTitle = ""
             chapter.isShowingAnswered = false
+            let i = 0
             chapter.stories.forEach((story, storyIndex) => {
               if (!story.notifSent && !story.isAnswered) {
-                if (storyIndex === 0) {
-                  console.log("uistor")
+                if (i === 0) {
                   story.sentDate = this.getNexDateQuestion(true)
+                  i++
                 } else {
                   story.sentDate = this.getNexDateQuestion()
                 }
@@ -1318,6 +1319,7 @@ export default {
     },
     confirmEditingStory: async function (keyStories) {
       try {
+        console.log("eeeeeeeeeeeeee")
         const { question, tempTitle } = this.selectedChapter.stories[keyStories]
         if (question != tempTitle) {
           this.loading = true
@@ -1952,12 +1954,11 @@ export default {
           } else {
             diffDay = 7 - diffDay
           }
-          if (!first || !this.user.lastQuestionsent) {
-            nexSentDate = dayjs(this.nextDateTosend)?.add(
-              diffDay.toString(),
-              "day"
-            )
-          }
+          nexSentDate = dayjs(this.nextDateTosend)?.add(
+            diffDay.toString(),
+            "day"
+          )
+
           break
         case 3:
           if (
