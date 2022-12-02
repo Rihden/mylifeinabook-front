@@ -381,11 +381,7 @@
                           />
                           <div
                             style="z-index: 10"
-                            class="
-                              question-control
-                              mobile
-                              question-control-delete
-                            "
+                            class="question-control mobile question-control-delete"
                             @click="startDeletingStory(keyStories)"
                             v-if="
                               !selectedChapter.stories[keyStories].editingTitle
@@ -600,11 +596,7 @@
               </div>
               <div class="right-side-story-form">
                 <div
-                  class="
-                    story-form-section
-                    image-selection-container
-                    d-flex-centered d-col
-                  "
+                  class="story-form-section image-selection-container d-flex-centered d-col"
                   style="padding-right: 22px"
                 >
                   <div
@@ -858,20 +850,10 @@ export default {
       ListPastQuestion: [],
       startDraggingStorie: {},
       finshDragginStorie: {},
+      recipGiftDate: "",
     }
   },
   methods: {
-    loadMore: function ({ target: { scrollTop, clientHeight, scrollHeight } }) {
-      // this.displaymenubutton = scrollTop < 30
-      if (scrollTop + clientHeight + 55 >= scrollHeight) {
-        this.busy = true
-
-        if (this.selectedPaginationIndex < this.paginationsCount) {
-          this.selectedPaginationIndex = this.selectedPaginationIndex + 1
-          this.tempSelectedPaginationIndex = this.selectedPaginationIndex
-        }
-      }
-    },
     updateDragArrowState: function () {
       let containerRef = null
       if (this.showingStories) {
@@ -933,51 +915,8 @@ export default {
       this.showDragUpArrow = false
       this.showDragDownArrow = false
     },
-    startDraggingChapters: function (keyChapter) {
-      this.draggingIndexChapters = keyChapter
-      this.dragging = true
-      this.updateDragArrowState()
-    },
-    switchPlacesChapters: function (keyChapter) {
-      const newIndex = keyChapter
-      const oldIndex = this.draggingIndexChapters
-
-      if (newIndex != oldIndex) {
-        const aux = this.chapters[oldIndex]
-        this.chapters.splice(oldIndex, 1)
-        this.chapters.splice(newIndex, 0, aux)
-        this.draggingIndexChapters = newIndex
-      }
-    },
-    stopDraggingChapters: async function () {
-      const newIndex = this.draggingIndexChapters
-
-      axios
-        .put(
-          serverUrl + "/api/books/update-chapter-order",
-          {
-            chapterId: this.chapters[newIndex]._id,
-            bookId: this.book._id,
-            newIndex,
-          },
-          { withCredentials: true }
-        )
-        .then(() => {})
-        .catch((err) => console.log(err))
-      this.dragging = false
-      this.draggingIndexChapters = -1
-      this.showDragUpArrow = false
-      this.showDragDownArrow = false
-    },
     dropFix: function (e) {
       e.preventDefault()
-    },
-    testsmth: function (e) {
-      console.log(e)
-      // const questionHeads = [
-      //   ...document.getElementsByClassName("question-head"),
-      // ];
-      // console.log(questionHeads);
     },
     filterStories: function () {
       this.selectedChapter.stories = this.backupStories.filter(
@@ -994,198 +933,14 @@ export default {
         this.filterStories()
       }
     },
-
-    //chapters
-    cancelEditing: function (id) {
-      const updatedChapter = this.chapters[id]
-      updatedChapter.tempTitle = ""
-      this.$store.commit("updateChapter", {
-        index: id,
-        chapter: updatedChapter,
-      })
-      this.editingTitleIndex = -1
-    },
-    startAddingChapter: async function () {
-      await this.confirmEditing()
-      this.isAddingChapter = true
-      this.$nextTick(() => {
-        this.$refs.newChapterInput.focus()
-      })
-    },
-    confirmEditing: async function () {
-      const id = this.editingTitleIndex
-      try {
-        if (id > -1 && this.chapters[id].title != this.chapters[id].tempTitle) {
-          this.chapters[id].title = this.chapters[id].tempTitle
-          const confirmedChapter = this.chapters[id]
-
-          const chapterData = {
-            _id: confirmedChapter._id,
-            bookId: this.user.bookId,
-            title: confirmedChapter.title,
-            isStandard: confirmedChapter.isStandard,
-            isActive: confirmedChapter.isActive,
-            isHidingStandardStories: confirmedChapter.isHidingStandardStories,
-            order: confirmedChapter.order,
-            storiesCount: confirmedChapter.storiesCount,
-            answeredStoriesCount: confirmedChapter.answeredStoriesCount,
-            pagesCount: confirmedChapter.pagesCount,
-            answeredStories: confirmedChapter.answeredStories,
-          }
-
-          this.loading = true
-          this.showingOverlay = true
-
-          const result2 = await axios.put(
-            serverUrl + "/api/chapters/",
-            chapterData,
-            { withCredentials: true }
-          )
-          if (result2.status != 200) {
-            console.log(result2.status)
-          }
-        }
-        this.editingTitleIndex = -1
-        this.loading = false
-        this.showingOverlay = false
-      } catch (error) {
-        this.editingTitleIndex = -1
-        this.loading = false
-        this.showingOverlay = false
-        console.log(error)
-      }
-    },
-    confirmNewChapter: async function () {
-      try {
-        const ChapterData = {
-          title: this.tempChapterTitle,
-          isStandard: false,
-          isActive: true,
-          isHidingStandardStories: true,
-          order: this.chapters.length,
-          storiesCount: 0,
-          answeredStoriesCount: 0,
-          pagesCount: 0,
-          bookId: this.user.bookId,
-        }
-        this.loading = true
-        this.showingOverlay = true
-        const result = await axios.post(
-          serverUrl + "/api/chapters/",
-          ChapterData,
-          { withCredentials: true }
-        )
-
-        if (result.status == 201) {
-          const newChapter = result.data
-          newChapter.tempTitle = ""
-          newChapter.isShowingAnswered = false
-          this.$store.commit("addChapter", newChapter)
-          this.loading = false
-          this.showingOverlay = false
-          this.tempChapterTitle = ""
-          this.isAddingChapter = false
-        }
-        if (result.status != 201) {
-          console.log(result.status)
-          this.loading = false
-          this.showingOverlay = false
-          alert(
-            "Error while adding the chapter. Please reload the page and try again."
-          )
-        }
-      } catch (error) {
-        this.loading = false
-        this.showingOverlay = false
-        console.log(error)
-      }
-      // await this.fillUserChapters(this.user.bookId);
-    },
-    cancelNewChapter: function () {
-      this.tempChapterTitle = ""
-      this.isAddingChapter = false
-    },
-    startEditingTitle: async function (id) {
-      await this.confirmEditing()
-      this.chapters[id].tempTitle = this.chapters[id].title
-      this.editingTitleIndex = id
-      const refName = "title" + id
-      this.cancelNewChapter()
-      this.$nextTick(() => {
-        this.$refs[refName][0].focus()
-      })
-    },
-    toggleActiveChapter: async function (id) {
-      try {
-        this.chapters[id].isActive = !this.chapters[id].isActive
-
-        //if got deactivated cancel editing its title
-        if (this.chapters[id].isActive == false) {
-          this.cancelEditing(id)
-        }
-        const toggledChapter = this.chapters[id]
-        const chapterData = {
-          _id: toggledChapter._id,
-          bookId: this.user.bookId,
-          title: toggledChapter.title,
-          isStandard: toggledChapter.isStandard,
-          isActive: toggledChapter.isActive,
-          isHidingStandardStories: toggledChapter.isHidingStandardStories,
-          order: toggledChapter.order,
-          storiesCount: toggledChapter.storiesCount,
-          answeredStoriesCount: toggledChapter.answeredStoriesCount,
-          pagesCount: toggledChapter.pagesCount,
-        }
-        this.loading = true
-        this.showingOverlay = true
-        await axios.put(serverUrl + "/api/chapters/", chapterData, {
-          withCredentials: true,
-        })
-        this.loading = false
-        this.showingOverlay = false
-      } catch (error) {
-        console.log(error)
-        this.loading = false
-        this.showingOverlay = false
-      }
-    },
-    startDeletingChapter: function (id) {
-      this.deletingChapterId = id
-      this.showingOverlay = true
-      this.isDeletingChapter = true
-    },
-    deleteChapter: async function () {
-      try {
-        const chapter = this.chapters[this.deletingChapterId]
-        this.isDeletingChapter = false
-        this.loading = true
-
-        const result = await axios.delete(
-          serverUrl + "/api/chapters/" + chapter._id,
-          { withCredentials: true }
-        )
-        if (result.status == 200) {
-          this.chapters.splice(this.deletingChapterId, 1)
-          this.showingOverlay = false
-          this.loading = false
-        }
-        if (result.status != 200) {
-          console.log(result.data)
-        }
-      } catch (error) {
-        console.log(error)
-        this.showingOverlay = false
-        this.loading = false
-      }
-    },
     selectChapter: async function (event, id, options) {
       this.lastQuestionsent = this.user?.lastQuestionsent
         ? this.user?.lastQuestionsent
         : dayjs().format("MM/DD/YYYY")
       this.nextDateTosend =
-        dayjs(this.lastQuestionsent).diff(dayjs(this.user?.recipGiftDate)) > 0
+        dayjs(this.lastQuestionsent).diff(dayjs(this.recipGiftDate)) > 0
           ? this.lastQuestionsent
-          : this.user?.recipGiftDate
+          : this.recipGiftDate
       if (
         !(
           (event && event.target.classList.contains("chapter-control")) ||
@@ -1216,7 +971,6 @@ export default {
                 } else {
                   story.sentDate = this.getNexDateQuestion()
                 }
-                console.log("story", story)
               }
 
               story.editingTitle = false
@@ -1250,52 +1004,6 @@ export default {
     },
 
     //stories
-    toggleHidingStandard: function () {
-      this.selectedChapter.isHidingStandardStories =
-        !this.selectedChapter.isHidingStandardStories
-      this.selectedPaginationIndex = 0
-    },
-    startEditingSelectedChapter: function () {
-      this.selectedChapter.tempTitle = this.selectedChapter.title
-
-      this.editingSelectedChapter = true
-      this.$nextTick(() => {
-        this.$refs.selectedChapterTitleInput.focus()
-      })
-    },
-    confirmEditingSelectedChapter: async function () {
-      if (this.selectedChapter.title != this.selectedChapter.tempTitle) {
-        this.selectedChapter.title = this.selectedChapter.tempTitle
-        const confirmedChapter = this.selectedChapter
-
-        const chapterData = {
-          _id: confirmedChapter._id,
-          bookId: this.user.bookId,
-          title: confirmedChapter.title,
-          isStandard: confirmedChapter.isStandard,
-          isActive: confirmedChapter.isActive,
-          isHidingStandardStories: confirmedChapter.isHidingStandardStories,
-          order: confirmedChapter.order,
-          storiesCount: confirmedChapter.storiesCount,
-          answeredStoriesCount: confirmedChapter.answeredStoriesCount,
-          pagesCount: confirmedChapter.pagesCount,
-          answeredStories: confirmedChapter.answeredStories,
-        }
-        this.editingSelectedChapter = false
-        axios
-          .put(serverUrl + "/api/chapters/", chapterData, {
-            withCredentials: true,
-          })
-          .then((response) => {
-            if (response.status != 200) {
-              console.log(response.status)
-            }
-          })
-          .catch((error) => {
-            console.log(error)
-          })
-      }
-    },
     startEditingStoryTitle: function (keyStories) {
       this.keyStoriesForEdit = keyStories
       this.editingSelectedChapter = false
@@ -1313,14 +1021,12 @@ export default {
 
       this.cancelNewStory()
       const refName = "title" + this.selectedChapterIndex + "-" + keyStories
-      this.cancelNewChapter()
       this.$nextTick(() => {
         this.$refs[refName][0]?.focus()
       })
     },
     confirmEditingStory: async function (keyStories) {
       try {
-        console.log("eeeeeeeeeeeeee")
         const { question, tempTitle } = this.selectedChapter.stories[keyStories]
         if (question != tempTitle) {
           this.loading = true
@@ -1637,21 +1343,6 @@ export default {
       }
       reader.readAsDataURL(file)
     },
-    encodeImageFileAsURLOLD: function (cId, qId) {
-      const s = "Image" + qId + "Q" + cId + "C"
-      const file = this.$refs[s].files[0]
-      let reader = new FileReader()
-      reader.onloadend = () => {
-        if (reader.result) {
-          this.selectedStory.imageBase64 = reader.result
-          this.selectedStory.imageFileName = file.name
-          this.saveAnswer()
-        } else {
-          alert("La sélection du fichier a échoué, veuillez réessayer.")
-        }
-      }
-      reader.readAsDataURL(file)
-    },
     deleteStoryImage: async function () {
       try {
         const story = this.selectedStory
@@ -1843,33 +1534,6 @@ export default {
     },
 
     //pagination handling
-    decrementPagination: function () {
-      if (this.selectedPaginationIndex > 1) {
-        this.selectedPaginationIndex = this.selectedPaginationIndex - 1
-        this.tempSelectedPaginationIndex = this.selectedPaginationIndex
-      }
-    },
-    incrementPagination: function () {
-      if (this.selectedPaginationIndex < this.paginationsCount) {
-        this.selectedPaginationIndex = this.selectedPaginationIndex + 1
-        this.tempSelectedPaginationIndex = this.selectedPaginationIndex
-      }
-    },
-    validatePagination: function () {
-      if (this.tempSelectedPaginationIndex > this.paginationsCount) {
-        this.tempSelectedPaginationIndex = this.paginationsCount
-      }
-      if (this.tempSelectedPaginationIndex < 1) {
-        this.tempSelectedPaginationIndex = 1
-      }
-    },
-    changePagination: function () {
-      if (this.tempSelectedPaginationIndex != this.selectedPaginationIndex) {
-        this.selectedPaginationIndex = this.tempSelectedPaginationIndex
-      } else {
-        this.$refs["pagination-input"].focus()
-      }
-    },
     startConfirmingShared: function () {
       this.confirmingSharing = true
       this.showingShareOverlay = true
@@ -2153,6 +1817,18 @@ export default {
   async created() {
     let params = new URLSearchParams(document.location.search)
     this.questionID = params.get("question-id")
+    if (
+      this.user.bookId === this.user.defaultBookId ||
+      !this.user.defaultBookId
+    ) {
+      this.recipGiftDate = this.user?.recipGiftDate
+    } else {
+      const book = this.user?.listOrders?.find(
+        (sto) => sto.bookId === this.user?.defaultBookId
+      )
+      const indexBook = this.user.listOrders?.indexOf(book)
+      this.recipGiftDate = this.user.listOrders[indexBook]?.recipGiftDate
+    }
     //const chapterIndex = params.get("chapter-id")
     if (this.questionID) {
       this.defaultQuestion = this.questionID.toString()
@@ -2169,9 +1845,9 @@ export default {
       ? this.user?.lastQuestionsent
       : dayjs().format("MM/DD/YYYY")
     this.nextDateTosend =
-      dayjs(this.lastQuestionsent).diff(dayjs(this.user?.recipGiftDate)) > 0
+      dayjs(this.lastQuestionsent).diff(dayjs(this.recipGiftDate)) > 0
         ? this.lastQuestionsent
-        : this.user?.recipGiftDate
+        : this.recipGiftDate
     this.displayDate =
       this.user.guest == 1 ||
       this.user.isBuyer == 0 ||

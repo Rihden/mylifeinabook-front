@@ -290,7 +290,7 @@
                     </button>
                     <div
                       style="margin-right: 15px; margin-top: 15px"
-                      v-if="emailSent"
+                      v-if="emailSent === true"
                     >
                       <img
                         src="../assets/check-red.svg"
@@ -300,6 +300,22 @@
                         style="margin-right: 10px"
                       />
                       <span class="tabs-span">Email sent</span>
+                    </div>
+                    <div
+                      style="margin-right: 15px; margin-top: 15px"
+                      v-if="emailSent === 'error'"
+                    >
+                      <img
+                        src="../assets/check-red.svg"
+                        alt=""
+                        height="16px"
+                        width="16px"
+                        style="margin-right: 10px"
+                      />
+                      <span class="tabs-span"
+                        >The gift email cannot be sent now since the gift date
+                        is scheduled for a later date.</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -689,6 +705,8 @@ import { VueTabs, VTab } from "vue-nav-tabs"
 import "vue-nav-tabs/themes/vue-tabs.css"
 import { serverUrl } from "../severUrl"
 import dayjs from "dayjs"
+import customParseFormat from "dayjs/plugin/customParseFormat"
+
 import Datepicker from "vuejs-datepicker"
 const timeStamp = new Date().getTime()
 const yesterdayTimeStamp = timeStamp - 24 * 60 * 60 * 1000
@@ -998,18 +1016,23 @@ export default {
     },
     async sendGiftEmail() {
       this.emailSent = false
-      const response = await axios.post(
-        serverUrl + "/api/users/sendgiftmail",
-        this.user,
-        {
-          withCredentials: true,
+      dayjs.extend(customParseFormat)
+      if (dayjs().diff(dayjs(this.recipGiftDate, "DD/MM/YYYY"), "hour") >= 0) {
+        const response = await axios.post(
+          serverUrl + "/api/users/sendgiftmail",
+          this.user,
+          {
+            withCredentials: true,
+          }
+        )
+        if (!response.status == 200) {
+          console.log(response.data)
+        } else {
+          this.emailSent = true
+          console.log("email envoyé")
         }
-      )
-      if (!response.status == 200) {
-        console.log(response.data)
       } else {
-        this.emailSent = true
-        console.log("email envoyé")
+        this.emailSent = "error"
       }
     },
   },

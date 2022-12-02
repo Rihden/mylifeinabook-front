@@ -228,11 +228,7 @@
                             @keypress.enter="confirmEditingStory(keyStories)"
                           />
                           <div
-                            class="
-                              question-control
-                              mobile
-                              question-control-delete
-                            "
+                            class="question-control mobile question-control-delete"
                             @click="startDeletingStory(keyStories)"
                             v-if="
                               !selectedChapter.stories[keyStories].editingTitle
@@ -517,11 +513,7 @@
               </div>
               <div class="right-side-story-form">
                 <div
-                  class="
-                    story-form-section
-                    image-selection-container
-                    d-flex-centered d-col
-                  "
+                  class="story-form-section image-selection-container d-flex-centered d-col"
                   style="padding-right: 22px"
                 >
                   <div
@@ -823,54 +815,8 @@ export default {
       this.showDragUpArrow = false
       this.showDragDownArrow = false
     },
-    startDraggingChapters: function (keyChapter) {
-      this.draggingIndexChapters = keyChapter
-      this.dragging = true
-      this.updateDragArrowState()
-    },
-    switchPlacesChapters: function (keyChapter) {
-      const newIndex = keyChapter
-      const oldIndex = this.draggingIndexChapters
-
-      if (newIndex != oldIndex) {
-        const aux = this.chapters[oldIndex]
-        this.chapters.splice(oldIndex, 1)
-        this.chapters.splice(newIndex, 0, aux)
-        this.draggingIndexChapters = newIndex
-      }
-    },
-    stopDraggingChapters: async function () {
-      const newIndex = this.draggingIndexChapters
-
-      axios
-        .put(
-          serverUrl + "/api/books/update-chapter-order",
-          {
-            chapterId: this.chapters[newIndex]._id,
-            bookId: this.book._id,
-            newIndex,
-          },
-          { withCredentials: true }
-        )
-        .then((res) => {
-          console.log(res.status)
-          console.log("updated order")
-        })
-        .catch((err) => console.log(err))
-      this.dragging = false
-      this.draggingIndexChapters = -1
-      this.showDragUpArrow = false
-      this.showDragDownArrow = false
-    },
     dropFix: function (e) {
       e.preventDefault()
-    },
-    testsmth: function (e) {
-      console.log(e)
-      // const questionHeads = [
-      //   ...document.getElementsByClassName("question-head"),
-      // ];
-      // console.log(questionHeads);
     },
     filterStories: function () {
       this.selectedChapter.stories = this.backupStories.filter(
@@ -880,14 +826,6 @@ export default {
             .indexOf(this.storiesFilterText.toLowerCase()) > -1
       )
     },
-    toggleFiltering: function () {
-      this.filteringStories = !this.filteringStories
-      if (!this.filteringStories) {
-        this.storiesFilterText = ""
-        this.filterStories()
-      }
-    },
-
     //chapters
     cancelEditing: function (id) {
       const updatedChapter = this.chapters[id]
@@ -1007,40 +945,6 @@ export default {
       this.$nextTick(() => {
         this.$refs[refName][0].focus()
       })
-    },
-    toggleActiveChapter: async function (id) {
-      try {
-        this.chapters[id].isActive = !this.chapters[id].isActive
-
-        //if got deactivated cancel editing its title
-        if (this.chapters[id].isActive == false) {
-          this.cancelEditing(id)
-        }
-        const toggledChapter = this.chapters[id]
-        const chapterData = {
-          _id: toggledChapter._id,
-          bookId: this.user.bookId,
-          title: toggledChapter.title,
-          isStandard: toggledChapter.isStandard,
-          isActive: toggledChapter.isActive,
-          isHidingStandardStories: toggledChapter.isHidingStandardStories,
-          order: toggledChapter.order,
-          storiesCount: toggledChapter.storiesCount,
-          answeredStoriesCount: toggledChapter.answeredStoriesCount,
-          pagesCount: toggledChapter.pagesCount,
-        }
-        this.loading = true
-        this.showingOverlay = true
-        await axios.put(serverUrl + "/api/chapters/", chapterData, {
-          withCredentials: true,
-        })
-        this.loading = false
-        this.showingOverlay = false
-      } catch (error) {
-        console.log(error)
-        this.loading = false
-        this.showingOverlay = false
-      }
     },
     startDeletingChapter: function (id) {
       this.deletingChapterId = id
