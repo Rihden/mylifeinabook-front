@@ -1463,7 +1463,6 @@ export default {
             title,
             isAnswered,
             isStandard,
-            order,
             textContent,
             imageCaption,
             lastUpdated,
@@ -1484,7 +1483,6 @@ export default {
               question,
               isAnswered,
               isStandard,
-              order,
               textContent,
               imageCaption,
               lastUpdated,
@@ -1817,18 +1815,7 @@ export default {
   async created() {
     let params = new URLSearchParams(document.location.search)
     this.questionID = params.get("question-id")
-    if (
-      this.user.bookId === this.user.defaultBookId ||
-      !this.user.defaultBookId
-    ) {
-      this.recipGiftDate = this.user?.recipGiftDate
-    } else {
-      const book = this.user?.listOrders?.find(
-        (sto) => sto.bookId === this.user?.defaultBookId
-      )
-      const indexBook = this.user.listOrders?.indexOf(book)
-      this.recipGiftDate = this.user.listOrders[indexBook]?.recipGiftDate
-    }
+
     //const chapterIndex = params.get("chapter-id")
     if (this.questionID) {
       this.defaultQuestion = this.questionID.toString()
@@ -1841,19 +1828,43 @@ export default {
       }
     }
     this.mailFrequence = this.user.mailFrequence
-    this.lastQuestionsent = this.user?.lastQuestionsent
-      ? this.user?.lastQuestionsent
-      : dayjs().format("MM/DD/YYYY")
+    if (
+      this.user.bookId === this.user.defaultBookId ||
+      !this.user.defaultBookId
+    ) {
+      this.recipGiftDate = this.user?.recipGiftDate
+      this.lastQuestionsent = this.user?.lastQuestionsent
+        ? this.user?.lastQuestionsent
+        : dayjs().format("MM/DD/YYYY")
+      this.displayDate =
+        this.user.guest == 1 ||
+        this.user.isBuyer == 0 ||
+        (this.user.isBuyer == 1 && this.user.guest !== 1)
+          ? true
+          : false
+    } else {
+      const book = this.user?.listOrders?.find(
+        (sto) => sto.bookId === this.user?.defaultBookId
+      )
+      const indexBook = this.user.listOrders?.indexOf(book)
+      this.recipGiftDate = this.user.listOrders[indexBook]?.recipGiftDate
+      this.lastQuestionsent = this.user?.listOrders[indexBook]?.lastQuestionsent
+        ? this.user?.listOrders[indexBook]?.lastQuestionsent
+        : dayjs().format("MM/DD/YYYY")
+      this.displayDate =
+        this.user?.listOrders[indexBook]?.guest == 1 ||
+        this.user?.listOrders[indexBook]?.isBuyer == 0 ||
+        (this.user?.listOrders[indexBook]?.isBuyer == 1 &&
+          this.user?.listOrders[indexBook]?.guest !== 1)
+          ? true
+          : false
+    }
+
     this.nextDateTosend =
       dayjs(this.lastQuestionsent).diff(dayjs(this.recipGiftDate)) > 0
         ? this.lastQuestionsent
         : this.recipGiftDate
-    this.displayDate =
-      this.user.guest == 1 ||
-      this.user.isBuyer == 0 ||
-      (this.user.isBuyer == 1 && this.user.guest !== 1)
-        ? true
-        : false
+
     //
   },
 }
