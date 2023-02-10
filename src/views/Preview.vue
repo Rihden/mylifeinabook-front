@@ -64,7 +64,7 @@ export default {
           serverUrl + "/api/books/" + bookId + "?populated=true",
           { withCredentials: true }
         )
-        const ornament = await fetch(serverUrl + "/book ornament.jpg").then(
+        const ornament = await fetch(serverUrl + "/book-ornament.jpg").then(
           (res) => res.arrayBuffer()
         )
         const bookStyles = { ornament }

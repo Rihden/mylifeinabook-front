@@ -381,7 +381,11 @@
                           />
                           <div
                             style="z-index: 10"
-                            class="question-control mobile question-control-delete"
+                            class="
+                              question-control
+                              mobile
+                              question-control-delete
+                            "
                             @click="startDeletingStory(keyStories)"
                             v-if="
                               !selectedChapter.stories[keyStories].editingTitle
@@ -596,7 +600,11 @@
               </div>
               <div class="right-side-story-form">
                 <div
-                  class="story-form-section image-selection-container d-flex-centered d-col"
+                  class="
+                    story-form-section
+                    image-selection-container
+                    d-flex-centered d-col
+                  "
                   style="padding-right: 22px"
                 >
                   <div
@@ -833,6 +841,7 @@ export default {
       questionID: "",
       mailFrequence: 2,
       lastQuestionsent: "",
+      isNewUserQuestion: false,
       displayDate: false,
       firstDateTosend: "",
       nextDateTosend: "",
@@ -851,6 +860,7 @@ export default {
       startDraggingStorie: {},
       finshDragginStorie: {},
       recipGiftDate: "",
+      isIwill: false,
     }
   },
   methods: {
@@ -934,11 +944,13 @@ export default {
       }
     },
     selectChapter: async function (event, id, options) {
+      this.isNewUserQuestion = this.user?.lastQuestionsent ? false : true
       this.lastQuestionsent = this.user?.lastQuestionsent
         ? this.user?.lastQuestionsent
         : dayjs().format("MM/DD/YYYY")
       this.nextDateTosend =
-        dayjs(this.lastQuestionsent).diff(dayjs(this.recipGiftDate)) > 0
+        dayjs(this.lastQuestionsent).diff(dayjs(this.recipGiftDate)) > 0 ||
+        this.isIwill
           ? this.lastQuestionsent
           : this.recipGiftDate
       if (
@@ -967,6 +979,7 @@ export default {
               if (!story.notifSent && !story.isAnswered) {
                 if (i === 0) {
                   story.sentDate = this.getNexDateQuestion(true)
+
                   i++
                 } else {
                   story.sentDate = this.getNexDateQuestion()
@@ -1195,9 +1208,15 @@ export default {
       this.backupStories = []
     },
     showStoryForm: async function (event, keyStories, options) {
+      const idQuestion = options?.onmount
+        ? keyStories
+        : this.selectedChapter.stories[keyStories]._id
+      const keyQuestion = options?.onmount ? options?.key : keyStories
+      console.log("idQuestion", idQuestion)
+      console.log("keyQuestion", keyQuestion)
       if (
         (!event?.target?.classList?.contains("question-control") &&
-          !this?.selectedChapter?.stories[keyStories]?.editingTitle) ||
+          !this?.selectedChapter?.stories[keyQuestion]?.editingTitle) ||
         (options && options.noClick)
       ) {
         try {
@@ -1210,9 +1229,7 @@ export default {
           this.loading = true
 
           const result = await axios.get(
-            serverUrl +
-              "/api/stories/" +
-              this.selectedChapter.stories[keyStories]._id,
+            serverUrl + "/api/stories/" + idQuestion,
             { withCredentials: true }
           )
           if (result.status == 200) {
@@ -1220,7 +1237,7 @@ export default {
             story.editingTitle = false
             story.tempTitle = ""
             this.selectedStory = JSON.parse(JSON.stringify(story))
-            this.SelectedStoryIndex = keyStories
+            this.SelectedStoryIndex = keyQuestion
             this.showingForm = true
             this.showingStories = false
             this.showingOverlay = false
@@ -1241,15 +1258,15 @@ export default {
         const story = this.selectedStory
 
         this.previousFormData = JSON.stringify({
-          question: story.question,
-          title: story.title,
-          textContent: story.textContent,
-          caption: story.imageCaption,
+          question: story?.question,
+          title: story?.title,
+          textContent: story?.textContent,
+          caption: story?.imageCaption,
         })
 
         this.autosaveInterval = setInterval(
           this.saveAnswer,
-          2000,
+          20000,
           this.selectedChapterIndex,
           this.SelectedStoryIndex
         )
@@ -1351,7 +1368,7 @@ export default {
 
         if (story.textContent.length > 0) {
           story.isAnswered = true
-          const ornament = await fetch(serverUrl + "/book ornament.jpg").then(
+          const ornament = await fetch(serverUrl + "/book-ornament.jpg").then(
             (res) => res.arrayBuffer()
           )
           story.pagesCount = await calculateStoryPages(story, ornament)
@@ -1389,7 +1406,7 @@ export default {
       const story = this.selectedStory
       try {
         story.isAnswered = true
-        const ornament = await fetch(serverUrl + "/book ornament.jpg").then(
+        const ornament = await fetch(serverUrl + "/book-ornament.jpg").then(
           (res) => res.arrayBuffer()
         )
         story.pagesCount = await calculateStoryPages(story, ornament)
@@ -1435,20 +1452,20 @@ export default {
     saveAnswer: async function () {
       try {
         const story = this.selectedStory
-        story.imageCaption = story.imageCaption.replaceAll("\n", "")
+        story.imageCaption = story?.imageCaption?.replaceAll("\n", "")
 
         let currentStoryString = JSON.stringify({
           question: story.question,
           title: story.title,
           textContent: story.textContent,
-          caption: story.imageCaption,
+          caption: story?.imageCaption,
         })
         if (currentStoryString != this.previousFormData) {
           story.lastUpdated = new Date()
           this.previousFormData = currentStoryString
           if (story.textContent.length > 0) {
             story.isAnswered = true
-            const ornament = await fetch(serverUrl + "/book ornament.jpg").then(
+            const ornament = await fetch(serverUrl + "/book-ornament.jpg").then(
               (res) => res.arrayBuffer()
             )
             story.pagesCount = await calculateStoryPages(story, ornament)
@@ -1582,12 +1599,12 @@ export default {
     getNexDateQuestion: function (first = false) {
       let diffDay = dayjs(this.nextDateTosend).day() - 1
       let nexSentDate = this.nextDateTosend
-      let diffMonthDay
-      let nextMonthDate = dayjs(nexSentDate)?.add(1, "month").endOf("month")
-      let nextMonth = dayjs(nextMonthDate).get("month") + 1
-      let nextYear = dayjs(nextMonthDate).get("year")
-      const newmonthDate = "01/" + nextMonth + "/" + nextYear
-      const startDayofMonth = dayjs(newmonthDate).day()
+      let nextMonthDate = dayjs(nexSentDate)?.add(1, "month")
+
+      // let nextMonth = dayjs(nextMonthDate).get("month") + 1
+      //  let nextYear = dayjs(nextMonthDate).get("year")
+      // const newmonthDate = "01/" + nextMonth + "/" + nextYear
+      //  const startDayofMonth = dayjs(newmonthDate).day()
 
       const hoursDiff = dayjs().diff(dayjs(this.nextDateTosend), "hour")
       let diffWeekDay = Math.floor(hoursDiff / 24)
@@ -1687,14 +1704,32 @@ export default {
           }
           break
         case 5:
-          if (startDayofMonth == 0) {
-            diffMonthDay = 1
-          } else if (startDayofMonth == 1) {
-            diffMonthDay = 0
+          if (first && this.isNewUserQuestion) {
+            if (diffDay === -1) {
+              diffDay = 1
+            } else {
+              diffDay = 7 - diffDay
+            }
+            nexSentDate = dayjs(this.nextDateTosend)?.add(
+              diffDay.toString(),
+              "day"
+            )
           } else {
-            diffMonthDay = 8 - startDayofMonth
+            diffDay = dayjs(nextMonthDate).day() - 1
+            if (diffDay === -1) {
+              diffDay = 1
+            } else {
+              diffDay = 7 - diffDay
+            }
+            nexSentDate = dayjs(nextMonthDate)?.add(diffDay.toString(), "day")
+            let tempDate = dayjs(nexSentDate).subtract(7, "day")
+            if (
+              dayjs(nexSentDate).get("month") === dayjs(tempDate).get("month")
+            ) {
+              nexSentDate = tempDate
+            }
           }
-          nexSentDate = dayjs(newmonthDate)?.add(diffMonthDay, "day")
+
           break
         default:
           nexSentDate = dayjs(this.nextDateTosend)?.add(
@@ -1703,6 +1738,7 @@ export default {
           )
       }
       this.nextDateTosend = nexSentDate
+
       return dayjs(nexSentDate).format("ddd, MMMM D, YYYY")
     },
   },
@@ -1785,6 +1821,9 @@ export default {
       const story = this.selectedChapter?.stories?.find(
         (stro) => stro?._id == this.defaultQuestion
       )
+      const storyIndex = this.selectedChapter?.stories?.findIndex(
+        (story) => this.defaultQuestion == story._id
+      )
       if (story?.isAnswered) {
         this.$router.push(`/stories?nbr=2&question-id=${this.defaultQuestion}`)
       } else {
@@ -1794,7 +1833,8 @@ export default {
           })
           await this.showStoryForm(null, this.defaultQuestion, {
             noClick: true,
-            onmount: this.defaultQuestion == 0 ? false : true,
+            onmount: !this.defaultQuestion ? false : true,
+            key: !this.defaultQuestion ? "" : storyIndex,
           })
         } else {
           await this.selectChapter(null, 0, {
@@ -1805,6 +1845,13 @@ export default {
         if (this.questionID) {
           this.$router.replace("/")
         }
+        const story = this.selectedStory
+        this.previousFormData = JSON.stringify({
+          question: story?.question,
+          title: story?.title,
+          textContent: story?.textContent,
+          caption: story?.imageCaption,
+        })
       }
     } catch (error) {
       console.log(error)
@@ -1815,7 +1862,6 @@ export default {
   async created() {
     let params = new URLSearchParams(document.location.search)
     this.questionID = params.get("question-id")
-
     //const chapterIndex = params.get("chapter-id")
     if (this.questionID) {
       this.defaultQuestion = this.questionID.toString()
@@ -1833,6 +1879,7 @@ export default {
       !this.user.defaultBookId
     ) {
       this.recipGiftDate = this.user?.recipGiftDate
+      this.isNewUserQuestion = this.user?.lastQuestionsent ? false : true
       this.lastQuestionsent = this.user?.lastQuestionsent
         ? this.user?.lastQuestionsent
         : dayjs().format("MM/DD/YYYY")
@@ -1842,12 +1889,20 @@ export default {
         (this.user.isBuyer == 1 && this.user.guest !== 1)
           ? true
           : false
+      if (this.user.isBuyer && !this.user.guest) {
+        this.isIwill = true
+      }
     } else {
       const book = this.user?.listOrders?.find(
         (sto) => sto.bookId === this.user?.defaultBookId
       )
       const indexBook = this.user.listOrders?.indexOf(book)
       this.recipGiftDate = this.user.listOrders[indexBook]?.recipGiftDate
+      this.isNewUserQuestion = this.user?.listOrders[indexBook]
+        ?.lastQuestionsent
+        ? false
+        : true
+
       this.lastQuestionsent = this.user?.listOrders[indexBook]?.lastQuestionsent
         ? this.user?.listOrders[indexBook]?.lastQuestionsent
         : dayjs().format("MM/DD/YYYY")
@@ -1858,14 +1913,21 @@ export default {
           this.user?.listOrders[indexBook]?.guest !== 1)
           ? true
           : false
+      if (
+        this.user?.listOrders[indexBook]?.isBuyer &&
+        !this.user?.listOrders[indexBook]?.guest
+      ) {
+        this.isIwill = true
+      }
     }
 
     this.nextDateTosend =
-      dayjs(this.lastQuestionsent).diff(dayjs(this.recipGiftDate)) > 0
+      dayjs(this.lastQuestionsent).diff(dayjs(this.recipGiftDate)) > 0 ||
+      this.isIwill
         ? this.lastQuestionsent
-        : this.recipGiftDate
-
+        : this.recipGiftDat
     //
+    window.addEventListener("beforeunload", this.saveAnswer)
   },
 }
 </script>

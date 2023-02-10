@@ -228,7 +228,11 @@
                             @keypress.enter="confirmEditingStory(keyStories)"
                           />
                           <div
-                            class="question-control mobile question-control-delete"
+                            class="
+                              question-control
+                              mobile
+                              question-control-delete
+                            "
                             @click="startDeletingStory(keyStories)"
                             v-if="
                               !selectedChapter.stories[keyStories].editingTitle
@@ -513,7 +517,11 @@
               </div>
               <div class="right-side-story-form">
                 <div
-                  class="story-form-section image-selection-container d-flex-centered d-col"
+                  class="
+                    story-form-section
+                    image-selection-container
+                    d-flex-centered d-col
+                  "
                   style="padding-right: 22px"
                 >
                   <div
@@ -648,7 +656,6 @@
                   />
                   <div class="tabs-span">Saved</div>
                 </div>
-
                 <div
                   style="margin-right: 15px"
                   v-if="!loadingForm && formSavingError"
@@ -692,7 +699,8 @@ import { serverUrl } from "../severUrl"
 import { calculateStoryPages } from "../pdfUtils"
 import navbar from "../components/navbar.vue"
 import draggable from "vuedraggable"
-
+import heic2any from "heic2any"
+//import Vue from "vue"
 export default {
   components: {
     navbar,
@@ -989,7 +997,6 @@ export default {
           const bookId = this.user?.defaultBookId
             ? this.user?.defaultBookId
             : this.user.bookId
-          console.log("bookId", bookId)
           const result = await axios.get(
             serverUrl +
               "/api/chapters/?bkid=" +
@@ -1004,9 +1011,6 @@ export default {
             chapter.isShowingAnswered = true
 
             this.selectedChapter = JSON.parse(JSON.stringify(chapter))
-
-            //this.selectedChapter.stories = chapter.stories
-
             this.backupStories = this.selectedChapter.stories
 
             this.selectedChapterIndex = id
@@ -1097,6 +1101,7 @@ export default {
       try {
         const { question, tempTitle } = this.selectedChapter.stories[keyStories]
         if (question != tempTitle) {
+          console.log("question", question)
           this.loading = true
           this.showingOverlay = true
           this.isEditingNewQuestion = false
@@ -1283,15 +1288,15 @@ export default {
         const story = this.selectedStory
 
         this.previousFormData = JSON.stringify({
-          question: story.question,
-          title: story.title,
-          textContent: story.textContent,
-          caption: story.imageCaption,
+          question: story?.question,
+          title: story?.title,
+          textContent: story?.textContent,
+          caption: story?.imageCaption,
         })
 
         this.autosaveInterval = setInterval(
           this.saveAnswer,
-          2000,
+          20000,
           this.selectedChapterIndex,
           this.SelectedStoryIndex
         )
@@ -1309,16 +1314,45 @@ export default {
       const fileInput = this.$refs[s]
       if (fileInput) fileInput.click()
     },
-    encodeImageFileAsURL: function (cId, qId) {
+    blobToFile: function (theBlob, fileName) {
+      //A Blob() is almost a File() - it's just missing the two properties below which we will add
+      theBlob.lastModifiedDate = new Date()
+      theBlob.name = fileName
+      return theBlob
+    },
+
+    convertHeicImage: async function (file) {
+      const blobURL = URL.createObjectURL(file)
+      let newFile = file
+      await fetch(blobURL)
+        .then((res) => res.blob())
+        .then((blob) => heic2any({ blob, toType: "image/jpeg", quality: 0 }))
+        .then((conversionResult) => {
+          let newName = file.name.replace(/\.[^/.]+$/, ".jpg")
+          //Convert blob back to file
+          newFile = this.blobToFile(conversionResult, newName)
+        })
+        .catch((e) => {
+          console.log("error", e)
+        })
+      return newFile
+    },
+    encodeImageFileAsURL: async function (cId, qId) {
       const s = "Image" + qId + "Q" + cId + "C"
-      const file = this.$refs[s].files[0]
+      let file = this.$refs[s].files[0]
+      if (file.type === "image/heic") {
+        file = await this.convertHeicImage(file)
+      }
+      console.log("filefile file ", file)
       let reader = new FileReader()
       reader.onloadend = async () => {
         if (reader.result) {
           const fileSizeMB = file.size / 1024 / 1024
+          console.log("fileSizeMB", fileSizeMB)
           if (fileSizeMB > 0.1) {
             let image = new Image()
             image.src = reader.result
+            console.log("image", image)
             image.onload = () => {
               // have to wait till it's loaded
               const canvas = this.$refs.imageCanvas
@@ -1327,8 +1361,6 @@ export default {
               const heightRatio = 600 / height
               const chosenRatio =
                 widthRatio > heightRatio ? heightRatio : widthRatio
-
-              console.log(chosenRatio)
               canvas.width = width * chosenRatio
               canvas.height = height * chosenRatio
 
@@ -1340,13 +1372,12 @@ export default {
                 width * chosenRatio,
                 height * chosenRatio
               )
-              let compRatio = 0
+              /*let compRatio = 0
               if (fileSizeMB > 1) {
                 compRatio = (1 / fileSizeMB).toFixed(1)
               } else {
                 compRatio = 1
-              }
-              console.log(Number(compRatio))
+              }*/
               const imageData = canvas.toDataURL("image/jpeg")
               this.selectedStory.imageBase64 = imageData
               this.selectedStory.imageFileName = file.name
@@ -1361,7 +1392,7 @@ export default {
         }
       }
       const pattern = /image-*/
-
+      console.log("file.type", file)
       if (!file.type.match(pattern)) {
         alert(
           "Format du fichier invalide, veuillez selectionner une image de type JPEG, PNG ou GIF. uploaded file type: " +
@@ -1405,7 +1436,7 @@ export default {
 
         if (story.textContent.length > 0) {
           story.isAnswered = true
-          const ornament = await fetch(serverUrl + "/book ornament.jpg").then(
+          const ornament = await fetch(serverUrl + "/book-ornament.jpg").then(
             (res) => res.arrayBuffer()
           )
           story.pagesCount = await calculateStoryPages(story, ornament)
@@ -1443,7 +1474,7 @@ export default {
       const story = this.selectedStory
       try {
         story.isAnswered = true
-        const ornament = await fetch(serverUrl + "/book ornament.jpg").then(
+        const ornament = await fetch(serverUrl + "/book-ornament.jpg").then(
           (res) => res.arrayBuffer()
         )
         story.pagesCount = await calculateStoryPages(story, ornament)
@@ -1466,7 +1497,6 @@ export default {
         formData.append("imageFileName", imageFileName)
         formData.append("imageBase64", imageBase64)
         formData.append("pagesCount", pagesCount)
-
         const result = await axios.put(
           serverUrl + "/api/stories/image",
           formData,
@@ -1489,22 +1519,33 @@ export default {
     saveAnswer: async function () {
       try {
         const story = this.selectedStory
-        story.imageCaption = story.imageCaption.replaceAll("\n", "")
+        story.imageCaption = story?.imageCaption?.replaceAll("\n", "")
 
         let currentStoryString = JSON.stringify({
           question: story.question,
           title: story.title,
           textContent: story.textContent,
-          caption: story.imageCaption,
+          caption: story?.imageCaption,
         })
         if (currentStoryString != this.previousFormData) {
+          /* if (
+              JSON.parse(this.previousFormData)?.textContent !=
+                story.textContent &&
+              Math.abs(
+                story.textContent?.length -
+                  JSON.parse(this.previousFormData)?.textContent?.length
+              ) < 15
+            ) {
+              return
+            }*/
           story.lastUpdated = new Date()
           this.previousFormData = currentStoryString
           if (story.textContent.length > 0) {
             story.isAnswered = true
-            const ornament = await fetch(serverUrl + "/book ornament.jpg").then(
+            const ornament = await fetch(serverUrl + "/book-ornament.jpg").then(
               (res) => res.arrayBuffer()
             )
+
             story.pagesCount = await calculateStoryPages(story, ornament)
           } else {
             story.isAnswered = false
@@ -1752,6 +1793,13 @@ export default {
           this.user.isBuyer === 0 ||
           (this.user.isBuyer === 1 && this.user.guest != 1)
       }
+      const story = this.selectedStory
+      this.previousFormData = JSON.stringify({
+        question: story?.question,
+        title: story?.title,
+        textContent: story?.textContent,
+        caption: story?.imageCaption,
+      })
     } catch (error) {
       console.log(error)
       this.showingOverlay = false
@@ -1772,6 +1820,7 @@ export default {
       noClick: true,
     })
     this.selectedChapter.isShowingAnswered = true
+    window.addEventListener("beforeunload", this.saveAnswer)
   },
 }
 </script>

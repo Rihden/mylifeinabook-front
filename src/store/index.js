@@ -216,12 +216,7 @@ const store = new Vuex.Store({
                       storiesList.push(stories)
                       if (index == 0) {
                         chapters[0] = chapter
-                      } /*else {
-                      await axios.delete(
-                        serverUrl + "/api/chapters/" + chapter._id,
-                        { withCredentials: true }
-                      )
-                    }*/
+                      }
                     }
                   })
                   chapters[0].answeredStories = answeredStories

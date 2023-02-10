@@ -92,7 +92,7 @@
           >
           <router-link to="/stories" v-if="admin != 'true'"
             ><div class="nav-item">
-              <span>Stories</span>
+              <span>Saved Stories</span>
             </div></router-link
           >
 
@@ -141,14 +141,14 @@
           >
           <span style="font-weight: 500; color: white">Need help?</span>
 
-          <button
-            id="gorgias-chat-messenger-button-h"
+          <a
             aria-label="Open the chat"
             class="messenger-button-iframe-1lk5rjv help-button"
-            @click="gorgiasChatOpen()"
+            href="https://helpmylifeinabook.gorgias.help/en-US"
+            target="_blank"
           >
             <span>Help</span>
-          </button>
+          </a>
         </div>
       </div>
       <div class="user-item d-row">
@@ -245,7 +245,7 @@
         <span @click="reloadChapters()">Questions</span>
       </router-link>
       <router-link to="/stories" v-if="admin != 'true'">
-        <span>Stories</span>
+        <span>Saved Stories</span>
       </router-link>
 
       <router-link to="/couverture" v-if="admin != 'true'">

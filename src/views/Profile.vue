@@ -8,22 +8,27 @@
     <div class="overlay mobile-visible" v-if="showingEditingGiftDetails">
       <div class="pop-up d-flex-centered d-col" v-if="isEditingGiftDetails">
         <div class="pop-up-title" style="font-size: 18px; margin-bottom: 8px">
-          <span> Edit the gift recipient email </span>
+          <span>
+            Edit the
+            {{
+              keyToUpdate == "recipEmail" ? "gift recipient email" : keyToUpdate
+            }}
+          </span>
         </div>
         <div class="pop-up-paragraph" style="width: 100%; margin-bottom: 8px">
           <input
             class="gift-title-input-overlay chapter-control"
             type="text"
-            v-model="recipEmail"
-            :placeholder="recipEmail"
-            @keypress.enter="confirmEditingGift('recipEmail')"
-            :ref="recipEmail"
+            v-model="$data[keyToUpdate]"
+            :placeholder="$data[keyToUpdate]"
+            @keypress.enter="confirmEditingGift(keyToUpdate)"
+            :ref="$data[keyToUpdate]"
           />
         </div>
         <div class="pop-up-buttons-container">
           <button
             class="pop-up-btn confirm"
-            @click="confirmEditingGift('recipEmail')"
+            @click="confirmEditingGift(keyToUpdate)"
             style="
               border-radius: 60px;
               padding: 13px 44px;
@@ -660,7 +665,42 @@
                     />
                     <span class="checkmark"></span>
                   </label>
-
+                  <div
+                    class="d-flex"
+                    v-if="user.isBuyer == 1 && user.guest == 1"
+                  >
+                    <br />
+                    <div class="profile-route-title">
+                      <span>Disable guest responses :</span>
+                    </div>
+                    <label class="container-radio"
+                      >Yes
+                      <input
+                        type="radio"
+                        value="1"
+                        class="radio-custom"
+                        v-model="disableGustResponse"
+                        :checked="disableGustResponse == 1"
+                        name=""
+                      />
+                      <span class="checkmark"></span>
+                    </label>
+                    <label class="container-radio"
+                      >No
+                      <input
+                        type="radio"
+                        value="0"
+                        class="radio-custom"
+                        v-model="disableGustResponse"
+                        :checked="
+                          !disableGustResponse ||
+                          disableGustResponse == 0 ||
+                          disableGustResponse == null
+                        "
+                      />
+                      <span class="checkmark"></span>
+                    </label>
+                  </div>
                   <button
                     class="password-confirm-btn ptr confirm"
                     @click="confirmUpdate()"
@@ -685,6 +725,121 @@
                       style="margin-right: 10px"
                     />
                     <span class="tabs-span">Settings saved</span>
+                  </div>
+                </div>
+              </v-tab>
+              <v-tab title="Profile">
+                <div class="profile-panel">
+                  <div class="profile-route-title">
+                    <span>Profile</span>
+                  </div>
+                  <div
+                    v-if="errorStatus.status"
+                    style="color: #eb4848; margin-bottom: 10px"
+                  >
+                    <img
+                      src="../assets/clear.png"
+                      height="10px"
+                      width="10px"
+                      alt=""
+                    />
+                    {{ errorStatus.message }}
+                  </div>
+                  <div v-if="name">
+                    <div class="label-gift-title">Name:</div>
+                    <div class="d-row">
+                      <input
+                        class="gift-title-input chapter-control desktop-visible"
+                        type="text"
+                        v-if="action == 'name'"
+                        v-model="name"
+                        :placeholder="name"
+                        @keypress.enter="confirmEditingGift('name')"
+                        :ref="name"
+                      />
+                      <span v-if="action != 'name'" class="gift-title"
+                        >{{ name }}
+                      </span>
+                      <img
+                        @click="startEditingTitle('name')"
+                        v-if="action != 'name'"
+                        src="../assets/pencil.svg"
+                        class="chapter-control pen-icon-img"
+                        alt=""
+                        height="18px"
+                        width="18px"
+                        draggable="false"
+                      />
+                      <img
+                        @click="confirmEditingGift('name')"
+                        v-if="action == 'name'"
+                        src="../assets/confirm.svg"
+                        class="chapter-control pen-icon-img desktop-visible"
+                        alt=""
+                        height="30px"
+                        width="30px"
+                        draggable="false"
+                        style="margin-right: 8px"
+                      />
+                      <img
+                        @click="cancelEditing()"
+                        v-if="action == 'name'"
+                        src="../assets/cancel.svg"
+                        class="chapter-control pen-icon-img desktop-visible"
+                        alt=""
+                        height="30px"
+                        width="30px"
+                        draggable="false"
+                      />
+                    </div>
+                  </div>
+                  <div v-if="email">
+                    <div class="label-gift-title">Email:</div>
+                    <div class="d-row">
+                      <input
+                        class="gift-title-input chapter-control desktop-visible"
+                        type="text"
+                        v-if="action == 'email'"
+                        v-model="email"
+                        :placeholder="email"
+                        @keypress.enter="confirmEditingGift('email')"
+                        :ref="email"
+                      />
+                      <span v-if="action != 'email'" class="gift-title"
+                        >{{ email }}
+                      </span>
+                      <img
+                        @click="startEditingTitle('email')"
+                        v-if="action != 'email'"
+                        src="../assets/pencil.svg"
+                        class="chapter-control pen-icon-img"
+                        alt=""
+                        height="18px"
+                        width="18px"
+                        draggable="false"
+                      />
+                      <img
+                        @click="confirmEditingGift('email')"
+                        v-if="action == 'email'"
+                        src="../assets/confirm.svg"
+                        class="chapter-control pen-icon-img desktop-visible"
+                        alt=""
+                        height="30px"
+                        width="30px"
+                        draggable="false"
+                        style="margin-right: 8px"
+                      />
+                      <img
+                        @click="cancelEditing()"
+                        v-if="action == 'email'"
+                        src="../assets/cancel.svg"
+                        class="chapter-control pen-icon-img desktop-visible"
+                        alt=""
+                        height="30px"
+                        width="30px"
+                        draggable="false"
+                      />
+                    </div>
                   </div>
                 </div>
               </v-tab>
@@ -738,11 +893,16 @@ export default {
       visitorName: "",
       visitorEmail: "",
       mailFrequence: "",
+      disableGustResponse: 0,
       visitors: [],
       savedSeeting: false,
       action: "",
       recipEmail: "",
       recipGiftDate: "",
+      firstName: "",
+      lastName: "",
+      name: "",
+      email: "",
       giftMessage: "",
       errorStatus: {},
       state: statedate,
@@ -752,6 +912,7 @@ export default {
       showingEditingGiftMessage: false,
       isEditingGiftMessage: false,
       userOrder: {},
+      keyToUpdate: "",
     }
   },
   components: {
@@ -916,9 +1077,12 @@ export default {
       this.user.updateBoth = true
       if (this.isPrincipalOrder) {
         this.user.mailFrequence = this.mailFrequence
+        this.user.disableGustResponse = this.disableGustResponse
       } else {
         this.user.listOrders[this.getIndexOrder].mailFrequence =
           this.mailFrequence
+        this.user.listOrders[this.getIndexOrder].disableGustResponse =
+          this.disableGustResponse
       }
       const response = await axios.put(serverUrl + "/api/users/", this.user, {
         withCredentials: true,
@@ -932,23 +1096,17 @@ export default {
     },
     async confirmEditingGift(key) {
       this.savedSeeting = false
-      let giftSent = false
+
+      let lastRecipEmail =
+        key == "recipEmail" ? this.user.recipEmail : this.user.email
       if (this.isPrincipalOrder) {
         this.user[key] = this[key]
-        giftSent = this.user?.giftSubscriptionSent
       } else {
         this.user.listOrders[this.getIndexOrder][key] = this[key]
-        giftSent =
-          this.user?.listOrders[this.getIndexOrder].giftSubscriptionSent
       }
       const mailformat = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
       this.errorStatus = { status: false, message: "" }
-      if (giftSent) {
-        this.errorStatus = {
-          status: true,
-          message: "Gift Subscription already sent",
-        }
-      } else if (key === "recipEmail") {
+      if (key === "recipEmail") {
         if (
           this.recipEmail.length > 50 ||
           !this.recipEmail.match(mailformat) ||
@@ -958,12 +1116,44 @@ export default {
             status: true,
             message: "please verify the email adress",
           }
+        } else {
+          if (this.isPrincipalOrder) {
+            this.user.lastRecipEmail = lastRecipEmail
+          } else {
+            this.user.listOrders[this.getIndexOrder].lastRecipEmail =
+              lastRecipEmail
+          }
         }
       } else if (key === "recipGiftDate") {
         if (this.recipGiftDate == "") {
           this.errorStatus = {
             status: true,
             message: "Date invalid",
+          }
+        }
+      } else if (key === "mail") {
+        if (
+          this.mail.length > 50 ||
+          !this.mail.match(mailformat) ||
+          this.mail == ""
+        ) {
+          this.errorStatus = {
+            status: true,
+            message: "please verify the email adress",
+          }
+        } else {
+          if (this.isPrincipalOrder) {
+            this.user.lastRecipEmail = lastRecipEmail
+          } else {
+            this.user.listOrders[this.getIndexOrder].lastRecipEmail =
+              lastRecipEmail
+          }
+        }
+      } else if (key === "name") {
+        if (this.name == "") {
+          this.errorStatus = {
+            status: true,
+            message: "name invalid",
           }
         }
       }
@@ -997,7 +1187,8 @@ export default {
       this.isEditingGiftMessage = false
     },
     startEditingTitle(key) {
-      if (key == "recipEmail") {
+      if (key == "recipEmail" || key == "email" || key == "name") {
+        this.keyToUpdate = key
         this.showingEditingGiftDetails = true
         this.isEditingGiftDetails = true
       } else if (key == "giftMessage") {
@@ -1015,24 +1206,40 @@ export default {
       this.isEditingGiftMessage = false
     },
     async sendGiftEmail() {
-      this.emailSent = false
-      dayjs.extend(customParseFormat)
-      if (dayjs().diff(dayjs(this.recipGiftDate, "DD/MM/YYYY"), "hour") >= 0) {
-        const response = await axios.post(
-          serverUrl + "/api/users/sendgiftmail",
-          this.user,
-          {
-            withCredentials: true,
-          }
-        )
-        if (!response.status == 200) {
-          console.log(response.data)
-        } else {
-          this.emailSent = true
-          console.log("email envoyé")
+      let giftSent = false
+      if (this.isPrincipalOrder) {
+        giftSent = this.user?.giftSubscriptionSent
+      } else {
+        giftSent =
+          this.user?.listOrders[this.getIndexOrder].giftSubscriptionSent
+      }
+      if (giftSent) {
+        this.errorStatus = {
+          status: true,
+          message: "Gift Subscription already sent",
         }
       } else {
-        this.emailSent = "error"
+        this.emailSent = false
+        dayjs.extend(customParseFormat)
+        if (
+          dayjs().diff(dayjs(this.recipGiftDate, "DD/MM/YYYY"), "hour") >= 0
+        ) {
+          const response = await axios.post(
+            serverUrl + "/api/users/sendgiftmail",
+            this.user,
+            {
+              withCredentials: true,
+            }
+          )
+          if (!response.status == 200) {
+            console.log(response.data)
+          } else {
+            this.emailSent = true
+            console.log("email envoyé")
+          }
+        } else {
+          this.emailSent = "error"
+        }
       }
     },
   },
@@ -1065,16 +1272,27 @@ export default {
     if (!this.isPrincipalOrder) {
       this.userOrder = this.user.listOrders[this.getIndexOrder]
       this.mailFrequence = this.userOrder.mailFrequence
+      this.disableGustResponse = this.userOrder.disableGustResponse
+        ? this.userOrder.disableGustResponse
+        : 0
       this.recipGiftDate = dayjs(this.userOrder.recipGiftDate).format(
         "DD/MM/YYYY"
       )
       this.giftMessage = this.userOrder.giftMessage
       this.recipEmail = this.userOrder.recipEmail
+      this.name = this.userOrder.name
+      this.email = this.userOder.email
     } else {
       this.mailFrequence = this.user.mailFrequence
+      this.disableGustResponse = this.user.disableGustResponse
+        ? this.user.disableGustResponse
+        : 0
       this.recipGiftDate = dayjs(this.user.recipGiftDate).format("DD/MM/YYYY")
       this.giftMessage = this.user.giftMessage
       this.recipEmail = this.user.recipEmail
+      this.recipEmail = this.user.recipEmail
+      this.name = this.user.name
+      this.email = this.user.email
     }
   },
 }
@@ -1281,7 +1499,7 @@ export default {
   font-size: 18px;
   line-height: 27px;
   color: #14473c;
-  margin-bottom: 15px;
+  margin-top: 15px;
 }
 .gift-register-textarea {
   border: none;
