@@ -128,6 +128,104 @@
                   </div>
                   <div>
                     <div class="label-gift-title">
+                      Your gift recipient first name:
+                    </div>
+                    <div class="d-row">
+                      <input
+                        class="gift-title-input chapter-control desktop-visible"
+                        type="text"
+                        v-if="action == 'recipFirstName'"
+                        v-model="recipFirstName"
+                        :placeholder="recipFirstName"
+                        @keypress.enter="confirmEditingGift('recipFirstName')"
+                        :ref="recipFirstName"
+                      />
+                      <span v-if="action != 'recipFirstName'" class="gift-title"
+                        >{{ recipFirstName }}
+                      </span>
+                      <img
+                        @click="startEditingTitle('recipFirstName')"
+                        v-if="action != 'recipFirstName'"
+                        src="../assets/pencil.svg"
+                        class="chapter-control pen-icon-img"
+                        alt=""
+                        height="18px"
+                        width="18px"
+                        draggable="false"
+                      />
+                      <img
+                        @click="confirmEditingGift('recipFirstName')"
+                        v-if="action == 'recipFirstName'"
+                        src="../assets/confirm.svg"
+                        class="chapter-control pen-icon-img desktop-visible"
+                        alt=""
+                        height="30px"
+                        width="30px"
+                        draggable="false"
+                        style="margin-right: 8px"
+                      />
+                      <img
+                        @click="cancelEditing()"
+                        v-if="action == 'recipFirstName'"
+                        src="../assets/cancel.svg"
+                        class="chapter-control pen-icon-img desktop-visible"
+                        alt=""
+                        height="30px"
+                        width="30px"
+                        draggable="false"
+                      />
+                    </div>
+
+                    <div class="label-gift-title">
+                      Your gift recipient last name:
+                    </div>
+                    <div class="d-row">
+                      <input
+                        class="gift-title-input chapter-control desktop-visible"
+                        type="text"
+                        v-if="action == 'recipLastName'"
+                        v-model="recipLastName"
+                        :placeholder="recipLastName"
+                        @keypress.enter="confirmEditingGift('recipLastName')"
+                        :ref="recipLastName"
+                      />
+                      <span v-if="action != 'recipLastName'" class="gift-title"
+                        >{{ recipLastName }}
+                      </span>
+                      <img
+                        @click="startEditingTitle('recipLastName')"
+                        v-if="action != 'recipLastName'"
+                        src="../assets/pencil.svg"
+                        class="chapter-control pen-icon-img"
+                        alt=""
+                        height="18px"
+                        width="18px"
+                        draggable="false"
+                      />
+                      <img
+                        @click="confirmEditingGift('recipLastName')"
+                        v-if="action == 'recipLastName'"
+                        src="../assets/confirm.svg"
+                        class="chapter-control pen-icon-img desktop-visible"
+                        alt=""
+                        height="30px"
+                        width="30px"
+                        draggable="false"
+                        style="margin-right: 8px"
+                      />
+                      <img
+                        @click="cancelEditing()"
+                        v-if="action == 'recipLastName'"
+                        src="../assets/cancel.svg"
+                        class="chapter-control pen-icon-img desktop-visible"
+                        alt=""
+                        height="30px"
+                        width="30px"
+                        draggable="false"
+                      />
+                    </div>
+
+                    <div class="label-gift-title">
                       Your gift recipient email:
                     </div>
                     <div class="d-row">
@@ -175,6 +273,7 @@
                         draggable="false"
                       />
                     </div>
+
                     <div class="label-gift-title" style="margin-top: 20px">
                       Send gift on:
                     </div>
@@ -335,55 +434,19 @@
                   <div class="profile-route-title">
                     <span>Change Password</span>
                   </div>
-                  <div style="max-width: 350px">
-                    <div class="profile-form-section d-row">
-                      <input
-                        :type="passwordStates1"
-                        class="profile-input"
-                        :class="{ error: field1Error }"
-                        v-model="oldPw"
-                        @keypress.enter="updatePassword()"
-                        placeholder="Old Password"
-                      />
-                      <div
-                        class="password-eye update-password ptr"
-                        @click="togglePassword(1)"
-                      >
-                        <img src="../assets/eye.png" alt="" />
+                  <div style="max-width: 450px">
+                    <div class="profile-form-section">
+                      <div style="margin-bottom: 10px">
+                        Enter the email address linked to your account.
                       </div>
-                    </div>
-                    <div class="profile-form-section d-row">
                       <input
-                        :type="passwordStates2"
+                        type="email"
                         class="profile-input"
-                        v-model="newPw1"
-                        @keypress.enter="updatePassword()"
-                        :class="{ error: field2Error }"
-                        placeholder="New Password"
-                      />
-                      <div
-                        class="password-eye update-password ptr"
-                        @click="togglePassword(2)"
-                      >
-                        <img src="../assets/eye.png" alt="" />
-                      </div>
-                    </div>
-                    <div class="profile-form-section d-row">
-                      <input
-                        :type="passwordStates3"
-                        class="profile-input"
-                        v-model="newPw2"
-                        @keypress.enter="updatePassword()"
+                        v-model="emailForgot"
+                        @keypress.enter="sendResetEmail()"
                         :class="{ error: field3Error }"
-                        placeholder="Re-enter New Password"
+                        placeholder="Confirm your Email"
                       />
-                      <div class="password-eye update-password ptr">
-                        <img
-                          src="../assets/eye.png"
-                          alt=""
-                          @click="togglePassword(3)"
-                        />
-                      </div>
                     </div>
                     <div
                       style="
@@ -416,7 +479,7 @@
                     <div class="profile-btn-container" style="margin-top: 36px">
                       <button
                         class="password-confirm-btn ptr"
-                        @click="updatePassword()"
+                        @click="sendResetEmail()"
                       >
                         Confirm
                       </button>
@@ -898,6 +961,8 @@ export default {
       savedSeeting: false,
       action: "",
       recipEmail: "",
+      recipLastName: "",
+      recipFirstName: "",
       recipGiftDate: "",
       firstName: "",
       lastName: "",
@@ -913,6 +978,7 @@ export default {
       isEditingGiftMessage: false,
       userOrder: {},
       keyToUpdate: "",
+      emailForgot: "",
     }
   },
   components: {
@@ -1149,11 +1215,37 @@ export default {
               lastRecipEmail
           }
         }
-      } else if (key === "name") {
-        if (this.name == "") {
+      } else if (
+        key === "name" ||
+        key === "recipLastName" ||
+        key === "recipFirstName"
+      ) {
+        if (
+          this.name == "" ||
+          this.recipLastName == "" ||
+          this.recipFirstName == ""
+        ) {
           this.errorStatus = {
             status: true,
             message: "name invalid",
+          }
+        } else {
+          if (key === "name") {
+            if (this.isPrincipalOrder) {
+              this.user.name = this.name
+            } else {
+              this.user.listOrders[this.getIndexOrder].name = this.name
+            }
+          } else {
+            if (this.isPrincipalOrder) {
+              this.user.recipLName = this.recipLastName
+              this.user.recipFName = this.recipFirstName
+            } else {
+              this.user.listOrders[this.getIndexOrder].recipLName =
+                this.recipLastName
+              this.user.listOrders[this.getIndexOrder].recipFName =
+                this.recipFirstName
+            }
           }
         }
       }
@@ -1187,7 +1279,13 @@ export default {
       this.isEditingGiftMessage = false
     },
     startEditingTitle(key) {
-      if (key == "recipEmail" || key == "email" || key == "name") {
+      if (
+        key == "recipEmail" ||
+        key == "email" ||
+        key == "name" ||
+        key == "recipLastName" ||
+        key == "recipFirstName"
+      ) {
         this.keyToUpdate = key
         this.showingEditingGiftDetails = true
         this.isEditingGiftDetails = true
@@ -1242,6 +1340,35 @@ export default {
         }
       }
     },
+    async sendResetEmail() {
+      try {
+        this.loading = true
+        this.showingOverlay = true
+        const mailformat = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
+        if (
+          !this.emailForgot ||
+          this.emailForgot.length > 50 ||
+          !this.emailForgot.match(mailformat)
+        ) {
+          alert("please enter an email and respect its format")
+          return
+        }
+        const result = await axios.post(
+          serverUrl + "/api/users/reset-password",
+          { email: this.emailForgot.toLowerCase(), toEmail: this.toEmail },
+          { withCredentials: true }
+        )
+        this.loading = false
+        this.showingOverlay = false
+        if (result.status == 200) {
+          this.showEmailSent()
+        }
+      } catch (error) {
+        console.log(error)
+        this.loading = false
+        this.showingOverlay = false
+      }
+    },
   },
   computed: {
     user: function () {
@@ -1255,7 +1382,7 @@ export default {
     },
     getIndexOrder: function () {
       const story = this.user?.listOrders?.find(
-        (sto) => sto.bookId === this.user?.defaultBookId
+        (sto) => sto?.bookId === this.user?.defaultBookId
       )
       return this.user?.listOrders?.indexOf(story)
     },
@@ -1270,29 +1397,33 @@ export default {
 
   created() {
     if (!this.isPrincipalOrder) {
-      this.userOrder = this.user.listOrders[this.getIndexOrder]
-      this.mailFrequence = this.userOrder.mailFrequence
-      this.disableGustResponse = this.userOrder.disableGustResponse
-        ? this.userOrder.disableGustResponse
+      this.userOrder = this.user?.listOrders[this.getIndexOrder]
+      this.mailFrequence = this.userOrder?.mailFrequence
+      this.disableGustResponse = this.userOrder?.disableGustResponse
+        ? this.userOrder?.disableGustResponse
         : 0
-      this.recipGiftDate = dayjs(this.userOrder.recipGiftDate).format(
+      this.recipGiftDate = dayjs(this.userOrder?.recipGiftDate).format(
         "DD/MM/YYYY"
       )
-      this.giftMessage = this.userOrder.giftMessage
-      this.recipEmail = this.userOrder.recipEmail
-      this.name = this.userOrder.name
-      this.email = this.userOder.email
+      this.giftMessage = this.userOrder?.giftMessage
+      this.recipEmail = this.userOrder?.recipEmail
+      this.recipFirstName = this.userOrder?.recipFName
+      this.recipLastName = this.userOrder?.recipLName
+      this.name = this.userOrder?.name
+      this.email = this.userOder?.email
     } else {
       this.mailFrequence = this.user.mailFrequence
       this.disableGustResponse = this.user.disableGustResponse
         ? this.user.disableGustResponse
         : 0
-      this.recipGiftDate = dayjs(this.user.recipGiftDate).format("DD/MM/YYYY")
-      this.giftMessage = this.user.giftMessage
-      this.recipEmail = this.user.recipEmail
-      this.recipEmail = this.user.recipEmail
-      this.name = this.user.name
-      this.email = this.user.email
+      this.recipGiftDate = dayjs(this.user?.recipGiftDate).format("DD/MM/YYYY")
+      this.giftMessage = this.user?.giftMessage
+      this.recipEmail = this.user?.recipEmail
+      this.recipFirstName = this.user?.recipFName
+      this.recipLastName = this.user?.recipLName
+      this.recipEmail = this.user?.recipEmail
+      this.name = this.user?.name
+      this.email = this.user?.email
     }
   },
 }

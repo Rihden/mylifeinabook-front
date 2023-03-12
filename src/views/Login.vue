@@ -390,7 +390,6 @@ export default {
       this.login()
     }
     if (this.tokenSh) {
-      console.log(this.tokenSh)
       this.tokenSh.toString()
       this.login()
     }

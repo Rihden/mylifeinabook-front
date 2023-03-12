@@ -141,7 +141,16 @@ async function generateStory(content, options) {
 
     //Draw story Image
     if (content.imageBase64) {
-      let embeddedImage = await options.doc.embedJpg(content.imageBase64)
+      const fileType = content.imageBase64.substring(
+        content.imageBase64.indexOf("/") + 1,
+        content.imageBase64.indexOf(";base64")
+      )
+      let embeddedImage
+      if (fileType === "png") {
+        embeddedImage = await options.doc.embedPng(content.imageBase64)
+      } else {
+        embeddedImage = await options.doc.embedJpg(content.imageBase64)
+      }
 
       drawStoryImage(embeddedImage, {
         offsetY: nextCoordinate.offsetY,

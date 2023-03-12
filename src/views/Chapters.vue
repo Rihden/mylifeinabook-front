@@ -19,6 +19,23 @@
           <button class="pop-up-btn" @click="cancelDeletingStory()">NO</button>
         </div>
       </div>
+      <div class="pop-up d-flex-centered d-col" v-if="isResetQuestion">
+        <div class="pop-up-title">
+          <span>Confirmation</span>
+        </div>
+        <div class="pop-up-paragraph">
+          <h3 style="color: red; margin-bottom: 20px">
+            With This Action, You Will Lose All Your Stories And Images
+          </h3>
+          <span>Are you sure you want to reset questions ?</span>
+        </div>
+        <div class="pop-up-buttons-container">
+          <button class="pop-up-btn confirm-admin" @click="resetQuestion()">
+            Yes
+          </button>
+          <button class="pop-up-btn" @click="canceResetQuestionl()">No</button>
+        </div>
+      </div>
       <div v-if="loading">
         <div class="lds-dual-ring"></div>
       </div>
@@ -221,6 +238,12 @@
               </div>
               <div class="d-row search-secion">
                 <div class="d-flex-centered" style="height: 30px">
+                  <button
+                    class="reset-question hidden"
+                    @click="confirmResetQuestion()"
+                  >
+                    Reset All Questions
+                  </button>
                   <input
                     :class="{ hidden: !filteringStories }"
                     type="text"
@@ -861,6 +884,7 @@ export default {
       finshDragginStorie: {},
       recipGiftDate: "",
       isIwill: false,
+      isResetQuestion: false,
     }
   },
   methods: {
@@ -1741,6 +1765,41 @@ export default {
 
       return dayjs(nexSentDate).format("ddd, MMMM D, YYYY")
     },
+    confirmResetQuestion: function () {
+      this.showingOverlay = true
+      this.isResetQuestion = true
+    },
+    canceResetQuestionl: function () {
+      this.showingOverlay = false
+      this.isResetQuestion = false
+    },
+    resetQuestion: async function () {
+      try {
+        this.loading = true
+        const res = await axios.post(
+          `${serverUrl}/auth/cregister`,
+          {
+            bookId: this.book._id,
+          },
+          { withCredentials: true }
+        )
+        if (res?.status == 200) {
+          // window.location.reload()
+          this.successMessage = "Stories reset successfully"
+          this.displaySuccessMessage = true
+        } else {
+          this.errorMessage = "error in reset stories"
+          this.displayErrorMessage = true
+        }
+        this.loading = false
+        this.showingOverlay = false
+        this.isResetQuestion = false
+      } catch (e) {
+        this.loading = false
+        this.showingOverlay = false
+        this.isResetQuestion = false
+      }
+    },
   },
   computed: {
     paginationsCount: function () {
@@ -1975,7 +2034,13 @@ export default {
   display: inline-block;
   margin-right: 5px;
 }
-
+.reset-question {
+  padding: 15px;
+  background: white;
+  color: red;
+  border: 1px solid red;
+  border-radius: 50px;
+}
 .questions-section-container-header {
   margin-top: 30px;
 }

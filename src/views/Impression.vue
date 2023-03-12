@@ -508,9 +508,15 @@ export default {
         this.confirmingPrint = false
         this.loading = true
         this.showingOverlay = true
-
-        const response = await axios.get(
-          serverUrl + "/api/users/confirm-print/" + this.user._id,
+        const userData = {
+          userId: this.user._id,
+          dfBookId: this.user.defaultBookId
+            ? this.user.defaultBookId
+            : this.user.bookId,
+        }
+        const response = await axios.post(
+          serverUrl + "/api/users/confirm-print/",
+          userData,
           { withCredentials: true }
         )
         if (response.status == 200) {

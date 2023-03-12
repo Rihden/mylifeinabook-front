@@ -767,7 +767,6 @@ export default {
         containerRef = this.$refs.chapters_section_container_scrollable
       }
       if (!containerRef) {
-        console.log("ref is false")
         return false
       }
       const scrollTop = containerRef.scrollTop
@@ -799,9 +798,6 @@ export default {
         this.selectedChapter.stories[relatedContext?.index]
     },
     stopDraggingQuestion: async function () {
-      console.log("startStory", this.startDraggingStorie.order)
-      console.log("this.finshDragginStorie", this.finshDragginStorie.order)
-
       await axios
         .put(
           serverUrl + "/api/chapters/update-story-order",
@@ -1088,7 +1084,6 @@ export default {
       this.selectedChapter.stories[keyStories].editingTitle = true
       this.isEditingNewQuestion = true
       this.showingEditQuestionOverlay = true
-      //console.log("eeee")
 
       this.cancelNewStory()
       const refName = "title" + this.selectedChapterIndex + "-" + keyStories
@@ -1101,7 +1096,6 @@ export default {
       try {
         const { question, tempTitle } = this.selectedChapter.stories[keyStories]
         if (question != tempTitle) {
-          console.log("question", question)
           this.loading = true
           this.showingOverlay = true
           this.isEditingNewQuestion = false
@@ -1343,22 +1337,20 @@ export default {
       if (file.type === "image/heic") {
         file = await this.convertHeicImage(file)
       }
-      console.log("filefile file ", file)
-      let reader = new FileReader()
-      reader.onloadend = async () => {
+
+      /*reader.onloadend = async () => {
         if (reader.result) {
           const fileSizeMB = file.size / 1024 / 1024
           console.log("fileSizeMB", fileSizeMB)
           if (fileSizeMB > 0.1) {
             let image = new Image()
             image.src = reader.result
-            console.log("image", image)
             image.onload = () => {
               // have to wait till it's loaded
               const canvas = this.$refs.imageCanvas
               const { height, width } = image
-              const widthRatio = 900 / width
-              const heightRatio = 600 / height
+              const widthRatio = 1200 / width
+              const heightRatio = 900 / height
               const chosenRatio =
                 widthRatio > heightRatio ? heightRatio : widthRatio
               canvas.width = width * chosenRatio
@@ -1372,12 +1364,6 @@ export default {
                 width * chosenRatio,
                 height * chosenRatio
               )
-              /*let compRatio = 0
-              if (fileSizeMB > 1) {
-                compRatio = (1 / fileSizeMB).toFixed(1)
-              } else {
-                compRatio = 1
-              }*/
               const imageData = canvas.toDataURL("image/jpeg")
               this.selectedStory.imageBase64 = imageData
               this.selectedStory.imageFileName = file.name
@@ -1391,8 +1377,10 @@ export default {
           alert("La sélection du fichier a échoué, veuillez réessayer.")
         }
       }
+      */
+      await this.toBase64(file)
+      await this.uploadStoryImage()
       const pattern = /image-*/
-      console.log("file.type", file)
       if (!file.type.match(pattern)) {
         alert(
           "Format du fichier invalide, veuillez selectionner une image de type JPEG, PNG ou GIF. uploaded file type: " +
@@ -1411,7 +1399,22 @@ export default {
         alert("La taille de l'image doit être inférieure à 15Mo")
         return
       }
-      reader.readAsDataURL(file)
+    },
+    toBase64: async function (file) {
+      new Promise((resolve, reject) => {
+        const reader = new FileReader()
+
+        reader.readAsDataURL(file)
+        reader.onload = () => {
+          resolve(reader.result)
+          this.selectedStory.imageBase64 = reader.result
+          this.selectedStory.imageFileName = file.name
+        }
+        reader.onerror = (error) => {
+          reject(error)
+          alert("La sélection du fichier a échoué, veuillez réessayer.")
+        }
+      })
     },
     encodeImageFileAsURLOLD: function (cId, qId) {
       const s = "Image" + qId + "Q" + cId + "C"
@@ -1755,7 +1758,6 @@ export default {
     try {
       this.showingOverlay = true
       this.loading = true
-      console.log("DEBUG - fetching chapters")
       await this.$store.dispatch("fetchPopulatedChapters")
       this.showingOverlay = false
       this.loading = false
@@ -1809,7 +1811,6 @@ export default {
   async created() {
     let params = new URLSearchParams(document.location.search)
     this.questionID = params.get("question-id")
-    console.log("this.question:", this.questionID)
     //const chapterIndex = params.get("chapter-id")
     if (this.questionID) {
       this.defaultQuestion = this.questionID.toString()

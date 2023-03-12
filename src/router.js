@@ -10,6 +10,7 @@ import Register from "./views/Register.vue"
 import Impression from "./views/Impression.vue"
 import Profile from "./views/Profile.vue"
 import Admin from "./views/Admin.vue"
+import AdminOrders from "./views/AdminOrders.vue"
 import Welcome from "./views/Welcome.vue"
 import ResetPassword from "./views/ResetPassword.vue"
 import NotFound from "./views/NotFound.vue"
@@ -111,6 +112,14 @@ const router = new Router({
       },
     },
     {
+      path: "/admin/orders",
+      component: AdminOrders,
+      meta: {
+        isManager: true,
+        requiresAuth: true,
+      },
+    },
+    {
       path: "/welcome",
       component: Welcome,
       props: true,
@@ -147,6 +156,13 @@ router.beforeEach(async (to, from, next) => {
     } else {
       if (to.matched.some((record) => record.meta.isAdmin)) {
         if (userData.role == "admin") {
+          store.commit("setUser", userData)
+          next()
+        } else {
+          next({ path: "/" })
+        }
+      } else if (to.matched.some((record) => record.meta.isManager)) {
+        if (userData.role == "manager" || userData.role == "admin") {
           store.commit("setUser", userData)
           next()
         } else {

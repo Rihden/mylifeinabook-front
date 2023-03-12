@@ -243,7 +243,7 @@ export default {
     },
     downloadAudit: function () {
       try {
-        window.open(serverUrl + "/api/users/audit")
+        window.open(serverUrl + "/api/users/downloadcsv")
       } catch (error) {
         console.log(error)
       }
@@ -322,10 +322,10 @@ export default {
 
 <style>
 .site-background.admin {
-  background: #e1504b;
+  background: #0f172a;
 }
 .panel-tab-btn {
-  border-radius: 40px;
+  border-radius: 20px;
   padding: 20px 23px;
   color: rgba(6, 42, 32, 0.4);
   font-size: 18px;
@@ -337,7 +337,7 @@ export default {
   cursor: pointer;
 }
 .panel-tab-btn.active {
-  background: #e1504b;
+  background: #0f172a;
   color: white;
   font-weight: 500;
 }
@@ -350,8 +350,8 @@ export default {
   color: white;
   width: 168px;
   height: 44px;
-  background: #e1504b;
-  border-radius: 40px;
+  background: #0f172a;
+  border-radius: 20px;
 }
 
 .table-title-row {
@@ -395,7 +395,7 @@ export default {
   font-weight: 300;
 }
 .confirm-admin {
-  background: #e1504b;
+  background: #0f172a;
   color: white;
   margin-right: 30px;
   border: none;

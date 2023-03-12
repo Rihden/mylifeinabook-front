@@ -118,6 +118,12 @@
               <span>Printing</span>
             </div></router-link
           >
+          <router-link
+            to="/admin/orders"
+            v-if="admin == 'true' || manager == 'true'"
+          >
+            <div class="nav-item"><span>Orders management</span></div>
+          </router-link>
           <router-link to="/profile" v-if="admin != 'true'"
             ><div class="nav-item">
               <span>Settings</span>
@@ -262,6 +268,12 @@
       <router-link to="/admin" v-if="admin == 'true'">
         <span>Printing</span>
       </router-link>
+      <router-link
+        to="/admin/orders"
+        v-if="admin == 'true' || manager == 'true'"
+      >
+        <span>Orders management</span>
+      </router-link>
       <hr class="hr-menu" />
       <router-link to="/profile" v-if="admin != 'true'">
         <span>Settings</span>
@@ -282,7 +294,7 @@ import Vue from "vue"
 import VueMobileDetection from "vue-mobile-detection"
 Vue.use(VueMobileDetection)
 export default {
-  props: ["admin"],
+  props: ["admin", "manager"],
   data() {
     return {
       nameUser: "",
