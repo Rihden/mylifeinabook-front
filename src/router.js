@@ -145,6 +145,11 @@ const checkUser = function () {
 }
 
 router.beforeEach(async (to, from, next) => {
+  if (to.fullPath?.includes("plk=")) {
+    await axios.get(serverUrl + "/auth/logout", {
+      withCredentials: true,
+    })
+  }
   const userData = await checkUser()
 
   if (to.matched.some((record) => record.meta.requiresAuth)) {
