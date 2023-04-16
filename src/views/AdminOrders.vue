@@ -123,6 +123,21 @@
             />
           </div>
           <div class="d-row recreacte-row">
+            <input type="checkbox" v-model="checkedgdTR" />
+            <span v-if="checkedgdTR">keep default gift Date </span>
+            <datepicker
+              v-if="!checkedgdTR"
+              :disabled-dates="state.disabledDates"
+              input-class="datep-gift-input gift-title-input chapter-control recreate-form-input"
+              calendar-class="register-calendar"
+              v-model="giftDateTR"
+              name="giftDateTR"
+              ref="recipGiftDateInput"
+              format="yyyy-MM-dd"
+              placeholder="new gift Date"
+            ></datepicker>
+          </div>
+          <div class="d-row recreacte-row">
             <input type="checkbox" v-model="checkedgmTR" />
             <span v-if="checkedgmTR">keep default gift message </span>
             <textarea
@@ -177,6 +192,13 @@
                 placeholder="Enter an buyer email"
                 class="chapter-title-input story-form-input"
               />
+              <input
+                type="email"
+                name="emailReciptSearch"
+                v-model="emailReciptSearch"
+                placeholder="Enter an Reciptient email"
+                class="chapter-title-input story-form-input"
+              />
             </div>
             <div
               class="d-row"
@@ -189,12 +211,61 @@
               <button class="btn recreate-btn" @click="searchOrder()">
                 Search
               </button>
+              <button
+                v-if="noResult"
+                class="btn recreate-btn"
+                @click="confirmRecreateAccount()"
+              >
+                Create new order
+              </button>
             </div>
             <div
               v-if="displayErrorNotFound"
               style="margin-top: 25px; color: red"
             >
               <h3>{{ ErrorNotFoundMessage }}</h3>
+            </div>
+            <div
+              v-if="multiOrderForRecip"
+              style="
+                margin-top: 18px;
+                background: #ffffff;
+                border: 1px solid rgba(6, 42, 32, 0.2);
+                box-sizing: border-box;
+                border-radius: 30px;
+                min-height: 300px;
+                overflow-y: auto;
+                padding: 40px 27px;
+              "
+            >
+              <h4 style="margin-bottom: 20px">
+                Choose between this list ,wich order you want to use
+              </h4>
+              <div class="d-row table-title-row">
+                <div class="table-title-element">orderId</div>
+                <div class="table-title-element">Email buyer</div>
+              </div>
+              <div
+                v-for="(order, orderIndex) in multirecipOrders"
+                :key="orderIndex"
+              >
+                <div class="d-row table-row">
+                  <div class="table-title-element">
+                    <span>{{ order.orderId }}</span>
+                  </div>
+                  <div class="table-title-element">
+                    <span>{{ order.emailBuyer }}</span>
+                  </div>
+                  <div class="table-title-element">
+                    <button
+                      class="btn recreate-btn"
+                      @click="searchOrder(order.orderId, order.emailBuyer)"
+                    >
+                      Search
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div
               v-if="findOrder"
@@ -211,6 +282,7 @@
             >
               <div class="d-row table-title-row">
                 <div class="table-title-element">Type</div>
+                <div class="table-title-element">orderId</div>
                 <div class="table-title-element">orderNumber</div>
                 <div class="table-title-element">Email</div>
                 <div class="table-title-element">Name</div>
@@ -220,14 +292,20 @@
                 <div class="table-title-element">Recipient Last Name</div>
                 <div class="table-title-element">Recipient Email</div>
                 <div class="table-title-element">Recipient Gift Date</div>
+                <div class="table-title-element">Recipient Gift Message</div>
                 <div class="table-title-element">Mail Frequence</div>
                 <div class="table-title-element">Gift Subscription Sent</div>
                 <div class="table-title-element">last Question Sent</div>
+                <div class="table-title-element">Creation Date</div>
+                <div class="table-title-element">End Contract</div>
               </div>
               <div v-for="(order, orderIndex) in orders" :key="orderIndex">
                 <div class="d-row table-row">
                   <div class="table-title-element">
                     <span>{{ order.isBuyer ? "Buyer" : "Recip" }}</span>
+                  </div>
+                  <div class="table-title-element">
+                    <span>{{ order.orderId }}</span>
                   </div>
                   <div class="table-title-element">
                     <span>{{ order.orderNumber }}</span>
@@ -289,6 +367,17 @@
                     <span>{{ order.recipGiftDate | formatDate }}</span>
                   </div>
                   <div class="table-title-element">
+                    <span>
+                      <textarea
+                        v-if="orderIndex === 0"
+                        rows="4"
+                        style="box-sizing: border-box"
+                        class="question-title-textarea recreate-form-textarea"
+                        v-model="order.giftMessage"
+                      />
+                    </span>
+                  </div>
+                  <div class="table-title-element">
                     <span>{{ order.mailFrequence }}</span>
                   </div>
                   <div class="table-title-element">
@@ -296,6 +385,21 @@
                   </div>
                   <div class="table-title-element">
                     <span>{{ order.lastQuestionsent | formatDate }}</span>
+                  </div>
+                  <div class="table-title-element">
+                    <span>{{ order.creationDate | formatDate }}</span>
+                  </div>
+                  <div class="table-title-element">
+                    <datepicker
+                      :disabled-dates="state.disabledDates"
+                      input-class="datep-gift-input gift-title-input chapter-control recreate-form-input"
+                      calendar-class="register-calendar"
+                      v-model="order.dateEndContract"
+                      name="dateEndContract"
+                      ref="dateEndContract"
+                      format="yyyy-MM-dd"
+                      placeholder="End Contract"
+                    ></datepicker>
                   </div>
                 </div>
               </div>
@@ -363,15 +467,28 @@ import navbar from "../components/navbar.vue"
 import { serverUrl } from "../severUrl"
 import dayjs from "dayjs"
 import axios from "axios"
+import Datepicker from "vuejs-datepicker"
+const timeStamp = new Date().getTime()
+const yesterdayTimeStamp = timeStamp - 24 * 60 * 60 * 1000
+const yesterdayDate = new Date(yesterdayTimeStamp)
+
+const statedate = {
+  disabledDates: {
+    to: yesterdayDate,
+  },
+}
 export default {
   components: {
     navbar,
+    Datepicker,
   },
   data() {
     return {
       orderIdSearch: "",
       emailBuyerSearch: "",
+      emailReciptSearch: "",
       orders: [],
+      multirecipOrders: [],
       originalOrders: [],
       showingOverlay: false,
       isRecreateAccount: false,
@@ -396,19 +513,55 @@ export default {
       giftSenderTR: "",
       checkedgmTR: true,
       giftMessageTR: "",
+      checkedgdTR: true,
+      giftDateTR: "",
       isResetQuestion: false,
       isToIwill: false,
       isSendingGiftEmail: false,
+      state: statedate,
+      noResult: true,
+      multiOrderForRecip: false,
     }
   },
   methods: {
     initSearch: function () {
       this.findOrder = false
-      this.orders = false
-      this.originalOrders = false
+      this.orders = []
+      this.originalOrders = []
+      this.multirecipOrders = []
+      this.ErrorNotFoundMessage = ""
+      this.successMessage = ""
+      this.errorMessage = ""
+      this.displayErrorMessage = false
+      this.isDeletingOrder = false
+      this.checkedEBTR = true
+      this.checkedERTR = true
+      this.checkedFNRTR = true
+      this.checkedLNRTR = true
+      this.checkedgfTR = true
+      this.checkedgmTR = true
+      this.checkedgdTR = true
+      this.emailBuyerTR = ""
+      this.emailReciptientTR = ""
+      this.fNameReciptientTR = ""
+      this.lNameReciptientTR = ""
+      this.giftSenderTR = ""
+      this.giftMessageTR = ""
+      this.giftDateTR = ""
+      this.noResult = true
+      this.multiOrderForRecip = false
     },
-    searchOrder: async function () {
+    searchOrder: async function (orderId = null, emailBuyer = null) {
+      this.orders = []
+      this.originalOrders = []
+      this.multirecipOrders = []
+
+      if (orderId && emailBuyer) {
+        this.orderIdSearch = orderId
+        this.emailBuyerSearch = emailBuyer
+      }
       try {
+        this.multiOrderForRecip = false
         this.findOrder = false
         this.loading = true
         this.showingOverlay = true
@@ -436,21 +589,48 @@ export default {
               withCredentials: true,
             }
           )
+        } else if (this.emailReciptSearch) {
+          response = await axios.post(
+            serverUrl + "/api/users/get-users-by-email-recip",
+            { emailReciptSearch: this.emailReciptSearch },
+            {
+              withCredentials: true,
+            }
+          )
         }
         if (response.status == 200 && response?.data?.length > 0) {
-          this.findOrder = true
-          this.orders = response?.data
-          this.originalOrders = response?.data
-          this.orders[0].originMail = this?.orders[0].email
-          if (this.orders[1]) {
-            this.orders[1].originMail = this?.orders[1].email
+          if (response?.data[1] && response?.data[1].multiOrderForRecip) {
+            this.multiOrderForRecip = true
+            const ordersRecip = response?.data[0]
+            this.multirecipOrders[0] = {
+              orderId: ordersRecip?.orderId,
+              emailBuyer: ordersRecip?.emailBuyer,
+            }
+            ordersRecip?.listOrders?.map((order) => {
+              if (order?.orderId) {
+                this.multirecipOrders.push({
+                  orderId: order?.orderId,
+                  emailBuyer: order?.emailBuyer,
+                })
+              }
+            })
+          } else {
+            this.multiOrderForRecip = false
+            this.findOrder = true
+            this.orders = response?.data
+            this.originalOrders = response?.data
+            this.orders[0].originMail = this?.orders[0].email
+            if (this.orders[1]) {
+              this.orders[1].originMail = this?.orders[1].email
+            }
+            this.orders = this.orders?.filter((elem) => elem !== null)
+            this.originalOrders = this.orders?.filter((elem) => elem !== null)
+            this.noResult = false
           }
-          this.orders = this.orders?.filter((elem) => elem !== null)
-          this.originalOrders = this.orders?.filter((elem) => elem !== null)
         } else {
-          console.log(response)
           this.ErrorNotFoundMessage = "Commande not found"
           this.displayErrorNotFound = true
+          this.noResult = true
         }
 
         this.loading = false
@@ -460,6 +640,7 @@ export default {
         this.displayErrorNotFound = true
         this.loading = false
         this.showingOverlay = false
+        this.noResult = true
       }
     },
     confirmDelete: function () {
@@ -471,8 +652,10 @@ export default {
       this.isResetQuestion = true
     },
     confirmRecreateAccount: function () {
-      this.showingOverlay = true
-      this.isRecreateAccount = true
+      if (this.orderIdSearch) {
+        this.showingOverlay = true
+        this.isRecreateAccount = true
+      }
     },
     confirmToIWill: function () {
       this.showingOverlay = true
@@ -494,6 +677,7 @@ export default {
           `${serverUrl}/auth/cregister`,
           {
             bookId: this.orders[0]?.bookId,
+            userId: this.orders[0]._id,
           },
           { withCredentials: true }
         )
@@ -573,6 +757,7 @@ export default {
                 : "",
               giftSenderTR: !this.checkedgfTR ? this.giftSenderTR : "",
               giftMessageTR: !this.checkedgmTR ? this.giftMessageTR : "",
+              giftDateTR: !this.checkedgdTR ? this.giftDateTR : "",
             },
             {
               withCredentials: true,

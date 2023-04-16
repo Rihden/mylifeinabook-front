@@ -185,7 +185,7 @@
           </div>
           <div class="print-form-section">
             <input
-              type="number"
+              type="text"
               placeholder="Zip code"
               v-model="zipCode"
               class="print-input"

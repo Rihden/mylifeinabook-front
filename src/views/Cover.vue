@@ -879,9 +879,13 @@ export default {
       const styleIndex = this.styles?.find(
         (style) => style.index === this.currentCover.selectedStyleIndex
       )
-
+      //  setStyle
+      //this.currentCover.selectedStyleIndex
+      if (!styleIndex) {
+        this.setStyle(1)
+      }
       const resultStyle = await axios.get(
-        serverUrl + "/api/cover-styles/" + styleIndex._id,
+        serverUrl + "/api/cover-styles/" + styleIndex?._id,
         { withCredentials: true }
       )
       this.currentStyle = resultStyle.data

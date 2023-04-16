@@ -337,7 +337,6 @@
                 <draggable
                   @start="startDraggingQuestion"
                   @end="stopDraggingQuestion"
-                  :move="switchPlacesQuestion"
                   :list="paginationInterval"
                   delay-on-touch-only="true"
                   delay="100"
@@ -404,11 +403,7 @@
                           />
                           <div
                             style="z-index: 10"
-                            class="
-                              question-control
-                              mobile
-                              question-control-delete
-                            "
+                            class="question-control mobile question-control-delete"
                             @click="startDeletingStory(keyStories)"
                             v-if="
                               !selectedChapter.stories[keyStories].editingTitle
@@ -623,11 +618,7 @@
               </div>
               <div class="right-side-story-form">
                 <div
-                  class="
-                    story-form-section
-                    image-selection-container
-                    d-flex-centered d-col
-                  "
+                  class="story-form-section image-selection-container d-flex-centered d-col"
                   style="padding-right: 22px"
                 >
                   <div
@@ -808,6 +799,7 @@ import Vue from "vue"
 import VueMobileDetection from "vue-mobile-detection"
 import Vue2TouchEvents from "vue2-touch-events"
 import draggable from "vuedraggable"
+import heic2any from "heic2any"
 
 Vue.use(Vue2TouchEvents)
 
@@ -923,27 +915,42 @@ export default {
       this.dragging = true
       this.updateDragArrowState()
     },
-    switchPlacesQuestion: function ({ relatedContext }) {
-      this.finshDragginStorie =
-        this.selectedChapter.stories[relatedContext?.index]
-    },
     stopDraggingQuestion: async function () {
-      await axios
-        .put(
-          serverUrl + "/api/chapters/update-question-order",
+      this.isNewUserQuestion = this.user?.lastQuestionsent ? false : true
+      this.lastQuestionsent = this.user?.lastQuestionsent
+        ? this.user?.lastQuestionsent
+        : dayjs().format("MM/DD/YYYY")
+      this.nextDateTosend =
+        dayjs(this.lastQuestionsent).diff(dayjs(this.recipGiftDate)) > 0 ||
+        this.isIwill
+          ? this.lastQuestionsent
+          : this.recipGiftDate
+      let i = 0
+
+      this.paginationInterval.forEach(async (elem, index) => {
+        this.selectedChapter.stories[elem].order = index + 1
+        if (
+          !this.selectedChapter.stories[elem].notifSent &&
+          !this.selectedChapter.stories[elem].isAnswered
+        ) {
+          if (i === 0) {
+            this.selectedChapter.stories[elem].sentDate =
+              this.getNexDateQuestion(true)
+            i++
+          } else {
+            this.selectedChapter.stories[elem].sentDate =
+              this.getNexDateQuestion()
+          }
+        }
+        await axios.put(
+          serverUrl + "/api/stories/",
+          this.selectedChapter.stories[elem],
           {
-            chapterId: this.selectedChapter._id,
-            startStory: this.startDraggingStorie._id,
-            newindexStory: this.finshDragginStorie._id,
-          },
-          { withCredentials: true }
+            withCredentials: true,
+          }
         )
-        .then(async () => {
-          await this.selectChapter(null, 0, {
-            noClick: true,
-          })
-        })
-        .catch((err) => console.log(err))
+      })
+
       this.dragging = false
       this.draggingIndexQuestions = -1
       this.showDragUpArrow = false
@@ -967,7 +974,7 @@ export default {
         this.filterStories()
       }
     },
-    selectChapter: async function (event, id, options) {
+    selectChapter: function (event, id, options) {
       this.isNewUserQuestion = this.user?.lastQuestionsent ? false : true
       this.lastQuestionsent = this.user?.lastQuestionsent
         ? this.user?.lastQuestionsent
@@ -987,19 +994,57 @@ export default {
         try {
           this.showingOverlay = true
           this.loading = true
-          const result = await axios.get(
-            serverUrl +
-              "/api/chapters/" +
-              this.chapters[0]?._id +
-              "?populated=stories",
-            { withCredentials: true }
-          )
-          if (result.status == 200) {
-            const chapter = result.data
-            chapter.tempTitle = ""
-            chapter.isShowingAnswered = false
+          if (!options.refreshDate) {
+            if (this.chapters?.length > 0) {
+              const stories = this.chapters[0]?.stories?.filter(
+                (str) => !str.isAnswered
+              )
+              this.selectedChapter = this.chapters[0]
+              this.selectedChapter.stories = stories
+              this.backupStories = stories
+              this.selectedChapter.isShowingAnswered = false
+              this.selectedChapterIndex = id
+
+              let i = 0
+              this.selectedChapter.stories.forEach((story, storyIndex) => {
+                if (!story.notifSent && !story.isAnswered) {
+                  if (i === 0) {
+                    story.sentDate = this.getNexDateQuestion(true)
+
+                    i++
+                  } else {
+                    story.sentDate = this.getNexDateQuestion()
+                  }
+                }
+
+                story.editingTitle = false
+                story.tempTitle = ""
+                this.selectedChapter.stories[storyIndex] = story
+              }) // SORT BY ORDER ATTRIBUTE
+              this.selectedChapter.stories =
+                this.selectedChapter.stories?.filter(
+                  (story) => !story.isAnswered
+                )
+              this.listUpcomingQuestion = this.selectedChapter.stories?.filter(
+                (story) => !story.notifSent && !story.isAnswered
+              )
+              this.ListPastQuestion = this.selectedChapter.stories?.filter(
+                (story) => story.notifSent && !story.isAnswered
+              )
+              this.backupStories = this.selectedChapter.stories
+              this.selectedChapterIndex = id
+            }
+          } else {
+            this.selectedChapter.stories?.filter((story) => !story.isAnswered)
+            this.listUpcomingQuestion = this.selectedChapter.stories?.filter(
+              (story) => !story.notifSent && !story.isAnswered
+            )
+            this.ListPastQuestion = this.selectedChapter.stories?.filter(
+              (story) => story.notifSent && !story.isAnswered
+            )
+            this.backupStories = this.selectedChapter.stories
             let i = 0
-            chapter.stories.forEach((story, storyIndex) => {
+            this.selectedChapter.stories.forEach((story, storyIndex) => {
               if (!story.notifSent && !story.isAnswered) {
                 if (i === 0) {
                   story.sentDate = this.getNexDateQuestion(true)
@@ -1012,26 +1057,13 @@ export default {
 
               story.editingTitle = false
               story.tempTitle = ""
-              chapter.stories[storyIndex] = story
+              this.selectedChapter.stories[storyIndex] = story
             })
-            this.selectedChapter = JSON.parse(JSON.stringify(chapter))
-            // SORT BY ORDER ATTRIBUTE
-            this.selectedChapter.stories = this.selectedChapter.stories?.filter(
-              (story) => !story.isAnswered
-            )
-            this.listUpcomingQuestion = this.selectedChapter.stories?.filter(
-              (story) => !story.notifSent && !story.isAnswered
-            )
-            this.ListPastQuestion = this.selectedChapter.stories?.filter(
-              (story) => story.notifSent && !story.isAnswered
-            )
-            this.backupStories = this.selectedChapter.stories
-            this.selectedChapterIndex = id
-            this.showingOverlay = false
-            this.loading = false
-            this.showingStories = true
-            this.showingChapters = false
           }
+          this.showingOverlay = false
+          this.loading = false
+          this.showingStories = true
+          this.showingChapters = false
         } catch (error) {
           this.showingOverlay = false
           this.loading = false
@@ -1151,8 +1183,8 @@ export default {
           newStory.editingTitle = false
           newStory.tempTitle = ""
           this.selectedChapter.storiesCount++
-          this.selectedChapter.stories.push(newStory)
-          await this.selectChapter(null, 0, {
+          this.selectedChapter.stories.unshift(newStory)
+          this.selectChapter(null, 0, {
             noClick: true,
           })
         } else {
@@ -1185,7 +1217,9 @@ export default {
           { withCredentials: true }
         )
         if (result.status == 200) {
-          await this.selectChapter(null, 0, {
+          delete this.selectedChapter.stories[this.deletingStoryId]
+
+          this.selectChapter(null, 0, {
             noClick: true,
           })
         }
@@ -1236,8 +1270,6 @@ export default {
         ? keyStories
         : this.selectedChapter.stories[keyStories]._id
       const keyQuestion = options?.onmount ? options?.key : keyStories
-      console.log("idQuestion", idQuestion)
-      console.log("keyQuestion", keyQuestion)
       if (
         (!event?.target?.classList?.contains("question-control") &&
           !this?.selectedChapter?.stories[keyQuestion]?.editingTitle) ||
@@ -1247,27 +1279,22 @@ export default {
           if (options && options.noClick) {
             this.clearAutoSave()
           }
+          const storyIndex = this.selectedChapter?.stories?.findIndex(
+            (story) => idQuestion == story?._id
+          )
           this.editingSelectedChapter = false
           this.selectedChapter.tempTitle = ""
           this.showingOverlay = true
           this.loading = true
-
-          const result = await axios.get(
-            serverUrl + "/api/stories/" + idQuestion,
-            { withCredentials: true }
-          )
-          if (result.status == 200) {
-            const story = result.data
-            story.editingTitle = false
-            story.tempTitle = ""
-            this.selectedStory = JSON.parse(JSON.stringify(story))
-            this.SelectedStoryIndex = keyQuestion
-            this.showingForm = true
-            this.showingStories = false
-            this.showingOverlay = false
-            this.loading = false
-            this.startAutoSave()
-          }
+          this.editingSelectedChapter = false
+          this.selectedChapter.tempTitle = ""
+          this.selectedStory = this.selectedChapter.stories[storyIndex]
+          this.SelectedStoryIndex = storyIndex
+          this.showingForm = true
+          this.showingStories = false
+          this.showingOverlay = false
+          this.loading = false
+          this.startAutoSave()
         } catch (error) {
           console.log(error)
           this.showingOverlay = false
@@ -1308,9 +1335,28 @@ export default {
       const fileInput = this.$refs[s]
       if (fileInput) fileInput.click()
     },
-    encodeImageFileAsURL: function (cId, qId) {
+    convertHeicImage: async function (file) {
+      const blobURL = URL.createObjectURL(file)
+      let newFile = file
+      await fetch(blobURL)
+        .then((res) => res.blob())
+        .then((blob) => heic2any({ blob, toType: "image/jpeg", quality: 0 }))
+        .then((conversionResult) => {
+          let newName = file.name.replace(/\.[^/.]+$/, ".jpg")
+          //Convert blob back to file
+          newFile = this.blobToFile(conversionResult, newName)
+        })
+        .catch((e) => {
+          console.log("error", e)
+        })
+      return newFile
+    },
+    encodeImageFileAsURL: async function (cId, qId) {
       const s = "Image" + qId + "Q" + cId + "C"
-      const file = this.$refs[s].files[0]
+      let file = this.$refs[s].files[0]
+      if (file.type === "image/heic") {
+        file = await this.convertHeicImage(file)
+      }
       let reader = new FileReader()
       reader.onloadend = async () => {
         if (reader.result) {
@@ -1322,40 +1368,17 @@ export default {
               // have to wait till it's loaded
               const canvas = this.$refs.imageCanvas
               const { height, width } = image
-              const widthRatio = 900 / width
-              const heightRatio = 600 / height
-              const chosenRatio =
-                widthRatio > heightRatio ? heightRatio : widthRatio
-
-              canvas.width = width * chosenRatio
-              canvas.height = height * chosenRatio
-
+              canvas.width = width
+              canvas.height = height
               let ctx = canvas.getContext("2d")
-              ctx.drawImage(
-                image,
-                0,
-                0,
-                width * chosenRatio,
-                height * chosenRatio
-              )
-              let compRatio = 0
-              if (fileSizeMB > 1) {
-                compRatio = (1 / fileSizeMB).toFixed(1)
-              } else {
-                compRatio = 1
-              }
-              console.log(compRatio)
+              ctx.drawImage(image, 0, 0, width, height)
               const imageData = canvas.toDataURL("image/jpeg")
               this.selectedStory.imageBase64 = imageData
               this.selectedStory.imageFileName = file.name
-                ?.normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
             }
           } else {
             this.selectedStory.imageBase64 = reader.result
             this.selectedStory.imageFileName = file.name
-              ?.normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "")
           }
           await this.uploadStoryImage()
         } else {
@@ -1363,7 +1386,6 @@ export default {
         }
       }
       const pattern = /image-*/
-
       if (!file.type.match(pattern)) {
         alert(
           "Format du fichier invalide, veuillez selectionner une image de type JPEG, PNG ou GIF. uploaded file type: " +
@@ -1371,9 +1393,7 @@ export default {
         )
         return
       }
-
       const filesize = (file.size / 1024 / 1024).toFixed(4) // MB
-
       if (
         file.name != "item" &&
         typeof file.name != "undefined" &&
@@ -1565,13 +1585,13 @@ export default {
       this.selectedStory = null
       this.showingForm = false
       this.clearAutoSave()
-      const showingAnswered = this.selectedChapter?.isShowingAnswered
-      await this.selectChapter(null, this.selectedChapterIndex, {
-        noClick: true,
+      this.selectChapter(null, 0, {
+        refreshDoate: true,
       })
-      this.selectedChapter.isShowingAnswered = showingAnswered
+      this.selectedChapterIndex = 0
+      this.showingStories = true
+      this.showingChapters = false
     },
-
     //pagination handling
     startConfirmingShared: function () {
       this.confirmingSharing = true
@@ -1624,12 +1644,6 @@ export default {
       let diffDay = dayjs(this.nextDateTosend).day() - 1
       let nexSentDate = this.nextDateTosend
       let nextMonthDate = dayjs(nexSentDate)?.add(1, "month")
-
-      // let nextMonth = dayjs(nextMonthDate).get("month") + 1
-      //  let nextYear = dayjs(nextMonthDate).get("year")
-      // const newmonthDate = "01/" + nextMonth + "/" + nextYear
-      //  const startDayofMonth = dayjs(newmonthDate).day()
-
       const hoursDiff = dayjs().diff(dayjs(this.nextDateTosend), "hour")
       let diffWeekDay = Math.floor(hoursDiff / 24)
       switch (this.mailFrequence) {
@@ -1780,6 +1794,7 @@ export default {
           `${serverUrl}/auth/cregister`,
           {
             bookId: this.book._id,
+            userId: this.user._id,
           },
           { withCredentials: true }
         )
@@ -1887,16 +1902,17 @@ export default {
         this.$router.push(`/stories?nbr=2&question-id=${this.defaultQuestion}`)
       } else {
         if (this.defaultQuestion != null && this.defaultQuestion != "") {
-          await this.selectChapter(null, this.defaultChapter, {
+          this.selectChapter(null, 0, {
             noClick: true,
           })
+
           await this.showStoryForm(null, this.defaultQuestion, {
             noClick: true,
             onmount: !this.defaultQuestion ? false : true,
             key: !this.defaultQuestion ? "" : storyIndex,
           })
         } else {
-          await this.selectChapter(null, 0, {
+          this.selectChapter(null, 0, {
             noClick: true,
           })
         }

@@ -242,6 +242,25 @@ export default {
         this.isPassword = "password"
       }
     },
+    removeURLParameter: function (url, parameter) {
+      //prefer to use l.search if you have a location/link object
+      var urlparts = url.split("?")
+      if (urlparts.length >= 2) {
+        var prefix = encodeURIComponent(parameter) + "="
+        var pars = urlparts[1].split(/[&;]/g)
+
+        //reverse iteration as may be destructive
+        for (var i = pars.length; i-- > 0; ) {
+          //idiom for string.startsWith
+          if (pars[i].lastIndexOf(prefix, 0) !== -1) {
+            pars.splice(i, 1)
+          }
+        }
+
+        return urlparts[0] + (pars.length > 0 ? "?" + pars.join("&") : "")
+      }
+      return url
+    },
     login: async function () {
       const mailformat = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
       if (!this.tokenSh && !this.orderId) {
@@ -273,23 +292,27 @@ export default {
           this.$store.commit("setUser", response.data)
           this.loading = false
           this.showingOverlay = false
+          const params = this.removeURLParameter(
+            this.$router.history._startLocation,
+            "plk"
+          )
           if (response.data?.nbrOrders > 1) {
             const historyLocation = this.questionId
               ? `/welcome?question-id=${this.questionId}&chapter-id=${this.chapterId}`
-              : this.$router.history._startLocation
+              : params
             this.$router.push(
-              historyLocation.toLowerCase().indexOf("login") === -1 &&
-                historyLocation.toLowerCase().indexOf("register") === -1
+              historyLocation?.toLowerCase().indexOf("login") === -1 &&
+                historyLocation?.toLowerCase().indexOf("register") === -1
                 ? historyLocation
                 : "/welcome"
             )
           } else {
             const historyLocation = this.questionId
               ? `/?question-id=${this.questionId}&chapter-id=${this.chapterId}`
-              : this.$router.history._startLocation
+              : params
             this.$router.push(
-              historyLocation.toLowerCase().indexOf("login") === -1 &&
-                historyLocation.toLowerCase().indexOf("register") === -1
+              historyLocation?.toLowerCase().indexOf("login") === -1 &&
+                historyLocation?.toLowerCase().indexOf("register") === -1
                 ? historyLocation
                 : "/"
             )
@@ -391,6 +414,7 @@ export default {
     }
     if (this.tokenSh) {
       this.tokenSh.toString()
+      console.log("thistokensh, ", this.tokenSh)
       this.login()
     }
     if (this.questionId) {

@@ -171,7 +171,6 @@
                 <draggable
                   @start="startDraggingQuestion"
                   @end="stopDraggingQuestion"
-                  :move="switchPlacesQuestion"
                   element="span"
                   :list="paginationInterval"
                   delay-on-touch-only="true"
@@ -228,11 +227,7 @@
                             @keypress.enter="confirmEditingStory(keyStories)"
                           />
                           <div
-                            class="
-                              question-control
-                              mobile
-                              question-control-delete
-                            "
+                            class="question-control mobile question-control-delete"
                             @click="startDeletingStory(keyStories)"
                             v-if="
                               !selectedChapter.stories[keyStories].editingTitle
@@ -517,11 +512,7 @@
               </div>
               <div class="right-side-story-form">
                 <div
-                  class="
-                    story-form-section
-                    image-selection-container
-                    d-flex-centered d-col
-                  "
+                  class="story-form-section image-selection-container d-flex-centered d-col"
                   style="padding-right: 22px"
                 >
                   <div
@@ -695,6 +686,8 @@
 
 <script>
 import axios from "axios"
+//import loadImage from "blueimp-load-image"
+//import Jimp from "jimp"
 import { serverUrl } from "../severUrl"
 import { calculateStoryPages } from "../pdfUtils"
 import navbar from "../components/navbar.vue"
@@ -788,32 +781,23 @@ export default {
       }
     },
     startDraggingQuestion: function ({ oldIndex }) {
-      this.startDraggingStorie = this.selectedChapter.stories[oldIndex]
+      this.startDraggingStorie = oldIndex
       this.draggingIndexQuestions = oldIndex
       this.dragging = true
       this.updateDragArrowState()
     },
-    switchPlacesQuestion: function ({ relatedContext }) {
-      this.finshDragginStorie =
-        this.selectedChapter.stories[relatedContext?.index]
-    },
     stopDraggingQuestion: async function () {
-      await axios
-        .put(
-          serverUrl + "/api/chapters/update-story-order",
+      this.paginationInterval.forEach(async (elem, index) => {
+        this.selectedChapter.stories[elem].order = index + 1
+
+        await axios.put(
+          serverUrl + "/api/stories/",
+          this.selectedChapter.stories[elem],
           {
-            chapterId: this.selectedChapter._id,
-            startStory: this.startDraggingStorie._id,
-            newindexStory: this.finshDragginStorie._id,
-          },
-          { withCredentials: true }
+            withCredentials: true,
+          }
         )
-        .then(async () => {
-          await this.selectChapter(null, 0, {
-            noClick: true,
-          })
-        })
-        .catch((err) => console.log(err))
+      })
       this.dragging = false
       this.draggingIndexQuestions = -1
       this.showDragUpArrow = false
@@ -922,7 +906,6 @@ export default {
           this.isAddingChapter = false
         }
         if (result.status != 201) {
-          console.log(result.status)
           this.loading = false
           this.showingOverlay = false
           alert(
@@ -979,7 +962,7 @@ export default {
         this.loading = false
       }
     },
-    selectChapter: async function (event, id, options) {
+    selectChapter: function (event, id, options) {
       if (
         !(
           (event && event.target.classList.contains("chapter-control")) ||
@@ -990,31 +973,20 @@ export default {
         try {
           this.showingOverlay = true
           this.loading = true
-          const bookId = this.user?.defaultBookId
-            ? this.user?.defaultBookId
-            : this.user.bookId
-          const result = await axios.get(
-            serverUrl +
-              "/api/chapters/?bkid=" +
-              bookId +
-              "&populated=stories&answered=true",
-            { withCredentials: true }
-          )
-          if (result.status == 200) {
-            let chapter = result.data?.chapters
-            chapter.stories = result.data?.stories
-            chapter.tempTitle = ""
-            chapter.isShowingAnswered = true
-
-            this.selectedChapter = JSON.parse(JSON.stringify(chapter))
-            this.backupStories = this.selectedChapter.stories
-
+          if (this.chapters?.length > 0) {
+            const stories = this.chapters[0]?.stories?.filter(
+              (str) => str.isAnswered
+            )
+            this.selectedChapter = this.chapters[0]
+            this.selectedChapter.stories = stories
+            this.backupStories = stories
+            this.selectedChapter.isShowingAnswered = true
             this.selectedChapterIndex = id
-            this.showingOverlay = false
-            this.loading = false
-            this.showingStories = true
-            this.showingChapters = false
           }
+          this.showingOverlay = false
+          this.loading = false
+          this.showingStories = true
+          this.showingChapters = false
         } catch (error) {
           this.showingOverlay = false
           this.loading = false
@@ -1249,25 +1221,13 @@ export default {
           this.selectedChapter.tempTitle = ""
           this.showingOverlay = true
           this.loading = true
-
-          const result = await axios.get(
-            serverUrl +
-              "/api/stories/" +
-              this.selectedChapter.stories[StoryID]?._id,
-            { withCredentials: true }
-          )
-          if (result.status == 200) {
-            const story = result.data
-            story.editingTitle = false
-            story.tempTitle = ""
-            this.selectedStory = JSON.parse(JSON.stringify(story))
-            this.SelectedStoryIndex = StoryID
-            this.showingForm = true
-            this.showingStories = false
-            this.showingOverlay = false
-            this.loading = false
-            this.startAutoSave()
-          }
+          this.selectedStory = this.selectedChapter.stories[StoryID]
+          this.SelectedStoryIndex = StoryID
+          this.showingForm = true
+          this.showingStories = false
+          this.showingOverlay = false
+          this.loading = false
+          this.startAutoSave()
         } catch (error) {
           console.log(error)
           this.showingOverlay = false
@@ -1309,7 +1269,6 @@ export default {
       if (fileInput) fileInput.click()
     },
     blobToFile: function (theBlob, fileName) {
-      //A Blob() is almost a File() - it's just missing the two properties below which we will add
       theBlob.lastModifiedDate = new Date()
       theBlob.name = fileName
       return theBlob
@@ -1337,11 +1296,10 @@ export default {
       if (file.type === "image/heic") {
         file = await this.convertHeicImage(file)
       }
-
-      /*reader.onloadend = async () => {
+      let reader = new FileReader()
+      reader.onloadend = async () => {
         if (reader.result) {
           const fileSizeMB = file.size / 1024 / 1024
-          console.log("fileSizeMB", fileSizeMB)
           if (fileSizeMB > 0.1) {
             let image = new Image()
             image.src = reader.result
@@ -1349,21 +1307,10 @@ export default {
               // have to wait till it's loaded
               const canvas = this.$refs.imageCanvas
               const { height, width } = image
-              const widthRatio = 1200 / width
-              const heightRatio = 900 / height
-              const chosenRatio =
-                widthRatio > heightRatio ? heightRatio : widthRatio
-              canvas.width = width * chosenRatio
-              canvas.height = height * chosenRatio
-
+              canvas.width = width
+              canvas.height = height
               let ctx = canvas.getContext("2d")
-              ctx.drawImage(
-                image,
-                0,
-                0,
-                width * chosenRatio,
-                height * chosenRatio
-              )
+              ctx.drawImage(image, 0, 0, width, height)
               const imageData = canvas.toDataURL("image/jpeg")
               this.selectedStory.imageBase64 = imageData
               this.selectedStory.imageFileName = file.name
@@ -1377,9 +1324,6 @@ export default {
           alert("La sélection du fichier a échoué, veuillez réessayer.")
         }
       }
-      */
-      await this.toBase64(file)
-      await this.uploadStoryImage()
       const pattern = /image-*/
       if (!file.type.match(pattern)) {
         alert(
@@ -1388,9 +1332,7 @@ export default {
         )
         return
       }
-
       const filesize = (file.size / 1024 / 1024).toFixed(4) // MB
-
       if (
         file.name != "item" &&
         typeof file.name != "undefined" &&
@@ -1399,14 +1341,16 @@ export default {
         alert("La taille de l'image doit être inférieure à 15Mo")
         return
       }
+      reader.readAsDataURL(file)
     },
+    /*
     toBase64: async function (file) {
       new Promise((resolve, reject) => {
         const reader = new FileReader()
-
         reader.readAsDataURL(file)
         reader.onload = () => {
           resolve(reader.result)
+          console.log("reader.result", reader.result)
           this.selectedStory.imageBase64 = reader.result
           this.selectedStory.imageFileName = file.name
         }
@@ -1415,22 +1359,7 @@ export default {
           alert("La sélection du fichier a échoué, veuillez réessayer.")
         }
       })
-    },
-    encodeImageFileAsURLOLD: function (cId, qId) {
-      const s = "Image" + qId + "Q" + cId + "C"
-      const file = this.$refs[s].files[0]
-      let reader = new FileReader()
-      reader.onloadend = () => {
-        if (reader.result) {
-          this.selectedStory.imageBase64 = reader.result
-          this.selectedStory.imageFileName = file.name
-          this.saveAnswer()
-        } else {
-          alert("La sélection du fichier a échoué, veuillez réessayer.")
-        }
-      }
-      reader.readAsDataURL(file)
-    },
+    }*/
     deleteStoryImage: async function () {
       try {
         const story = this.selectedStory
@@ -1531,16 +1460,6 @@ export default {
           caption: story?.imageCaption,
         })
         if (currentStoryString != this.previousFormData) {
-          /* if (
-              JSON.parse(this.previousFormData)?.textContent !=
-                story.textContent &&
-              Math.abs(
-                story.textContent?.length -
-                  JSON.parse(this.previousFormData)?.textContent?.length
-              ) < 15
-            ) {
-              return
-            }*/
           story.lastUpdated = new Date()
           this.previousFormData = currentStoryString
           if (story.textContent.length > 0) {
@@ -1617,16 +1536,14 @@ export default {
       if (pagesCount > 0) return pagesCount + 1
       else return pagesCount
     },
-    hideStoryForm: async function () {
+    hideStoryForm: function () {
       this.SelectedStoryIndex = null
       this.selectedStory = null
       this.showingForm = false
       this.clearAutoSave()
-      const showingAnswered = this.selectedChapter?.isShowingAnswered
-      await this.selectChapter(null, this.selectedChapterIndex, {
-        noClick: true,
-      })
-      this.selectedChapter.isShowingAnswered = showingAnswered
+      this.selectedChapterIndex = 0
+      this.showingStories = true
+      this.showingChapters = false
     },
 
     //pagination handling
@@ -1761,21 +1678,15 @@ export default {
       await this.$store.dispatch("fetchPopulatedChapters")
       this.showingOverlay = false
       this.loading = false
-
+      this.selectChapter(null, 0, {
+        noClick: true,
+      })
       if (this.defaultQuestion != null && this.defaultQuestion != "") {
-        await this.selectChapter(null, this.defaultChapter, {
-          noClick: true,
-        })
         await this.showStoryForm(null, this.defaultQuestion, {
           noClick: true,
           onmount: this.defaultQuestion == 0 ? false : true,
         })
-      } else {
-        await this.selectChapter(null, 0, {
-          noClick: true,
-        })
       }
-      this.selectedChapter.isShowingAnswered = true
       this.selectedPaginationIndex = 1
       this.cancelNewStory()
       if (this.questionID) {
@@ -1787,13 +1698,13 @@ export default {
         )
         const indexStory = this.user.listOrders?.indexOf(book)
         this.canShare =
-          this.user.listOrders[indexStory].isBuyer === 0 ||
-          (this.user.listOrders[indexStory].isBuyer === 1 &&
+          this.user.listOrders[indexStory]?.isBuyer === 0 ||
+          (this.user.listOrders[indexStory]?.isBuyer === 1 &&
             this.user.listOrders[indexStory].guest != 1)
       } else {
         this.canShare =
-          this.user.isBuyer === 0 ||
-          (this.user.isBuyer === 1 && this.user.guest != 1)
+          this.user?.isBuyer === 0 ||
+          (this.user?.isBuyer === 1 && this.user.guest != 1)
       }
       const story = this.selectedStory
       this.previousFormData = JSON.stringify({
@@ -1817,10 +1728,9 @@ export default {
       //this.defaultChapter = chapterIndex ? chapterIndex.toString() : 0
       this.defaultChapter = 0
     }
-    await this.selectChapter(null, 0, {
+    this.selectChapter(null, 0, {
       noClick: true,
     })
-    this.selectedChapter.isShowingAnswered = true
     window.addEventListener("beforeunload", this.saveAnswer)
   },
 }

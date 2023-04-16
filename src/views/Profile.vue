@@ -11,7 +11,13 @@
           <span>
             Edit the
             {{
-              keyToUpdate == "recipEmail" ? "gift recipient email" : keyToUpdate
+              keyToUpdate == "recipEmail"
+                ? "gift recipient email"
+                : keyToUpdate == "recipFName"
+                ? "gift recipient first name"
+                : keyToUpdate == "recipLName"
+                ? "gift recipient last name"
+                : keyToUpdate
             }}
           </span>
         </div>
@@ -134,18 +140,18 @@
                       <input
                         class="gift-title-input chapter-control desktop-visible"
                         type="text"
-                        v-if="action == 'recipFirstName'"
-                        v-model="recipFirstName"
-                        :placeholder="recipFirstName"
-                        @keypress.enter="confirmEditingGift('recipFirstName')"
-                        :ref="recipFirstName"
+                        v-if="action == 'recipFName'"
+                        v-model="recipFName"
+                        :placeholder="recipFName"
+                        @keypress.enter="confirmEditingGift('recipFName')"
+                        :ref="recipFName"
                       />
-                      <span v-if="action != 'recipFirstName'" class="gift-title"
-                        >{{ recipFirstName }}
+                      <span v-if="action != 'recipFName'" class="gift-title"
+                        >{{ recipFName }}
                       </span>
                       <img
-                        @click="startEditingTitle('recipFirstName')"
-                        v-if="action != 'recipFirstName'"
+                        @click="startEditingTitle('recipFName')"
+                        v-if="action != 'recipFName'"
                         src="../assets/pencil.svg"
                         class="chapter-control pen-icon-img"
                         alt=""
@@ -154,8 +160,8 @@
                         draggable="false"
                       />
                       <img
-                        @click="confirmEditingGift('recipFirstName')"
-                        v-if="action == 'recipFirstName'"
+                        @click="confirmEditingGift('recipFName')"
+                        v-if="action == 'recipFName'"
                         src="../assets/confirm.svg"
                         class="chapter-control pen-icon-img desktop-visible"
                         alt=""
@@ -166,7 +172,7 @@
                       />
                       <img
                         @click="cancelEditing()"
-                        v-if="action == 'recipFirstName'"
+                        v-if="action == 'recipFName'"
                         src="../assets/cancel.svg"
                         class="chapter-control pen-icon-img desktop-visible"
                         alt=""
@@ -183,18 +189,18 @@
                       <input
                         class="gift-title-input chapter-control desktop-visible"
                         type="text"
-                        v-if="action == 'recipLastName'"
-                        v-model="recipLastName"
-                        :placeholder="recipLastName"
-                        @keypress.enter="confirmEditingGift('recipLastName')"
-                        :ref="recipLastName"
+                        v-if="action == 'recipLName'"
+                        v-model="recipLName"
+                        :placeholder="recipLName"
+                        @keypress.enter="confirmEditingGift('recipLName')"
+                        :ref="recipLName"
                       />
-                      <span v-if="action != 'recipLastName'" class="gift-title"
-                        >{{ recipLastName }}
+                      <span v-if="action != 'recipLName'" class="gift-title"
+                        >{{ recipLName }}
                       </span>
                       <img
-                        @click="startEditingTitle('recipLastName')"
-                        v-if="action != 'recipLastName'"
+                        @click="startEditingTitle('recipLName')"
+                        v-if="action != 'recipLName'"
                         src="../assets/pencil.svg"
                         class="chapter-control pen-icon-img"
                         alt=""
@@ -203,8 +209,8 @@
                         draggable="false"
                       />
                       <img
-                        @click="confirmEditingGift('recipLastName')"
-                        v-if="action == 'recipLastName'"
+                        @click="confirmEditingGift('recipLName')"
+                        v-if="action == 'recipLName'"
                         src="../assets/confirm.svg"
                         class="chapter-control pen-icon-img desktop-visible"
                         alt=""
@@ -215,7 +221,7 @@
                       />
                       <img
                         @click="cancelEditing()"
-                        v-if="action == 'recipLastName'"
+                        v-if="action == 'recipLName'"
                         src="../assets/cancel.svg"
                         class="chapter-control pen-icon-img desktop-visible"
                         alt=""
@@ -961,8 +967,8 @@ export default {
       savedSeeting: false,
       action: "",
       recipEmail: "",
-      recipLastName: "",
-      recipFirstName: "",
+      recipLName: "",
+      recipFName: "",
       recipGiftDate: "",
       firstName: "",
       lastName: "",
@@ -1217,14 +1223,10 @@ export default {
         }
       } else if (
         key === "name" ||
-        key === "recipLastName" ||
-        key === "recipFirstName"
+        key === "recipLName" ||
+        key === "recipFName"
       ) {
-        if (
-          this.name == "" ||
-          this.recipLastName == "" ||
-          this.recipFirstName == ""
-        ) {
+        if (this.name == "" || this.recipLName == "" || this.recipFName == "") {
           this.errorStatus = {
             status: true,
             message: "name invalid",
@@ -1238,13 +1240,13 @@ export default {
             }
           } else {
             if (this.isPrincipalOrder) {
-              this.user.recipLName = this.recipLastName
-              this.user.recipFName = this.recipFirstName
+              this.user.recipLName = this.recipLName
+              this.user.recipFName = this.recipFName
             } else {
               this.user.listOrders[this.getIndexOrder].recipLName =
-                this.recipLastName
+                this.recipLName
               this.user.listOrders[this.getIndexOrder].recipFName =
-                this.recipFirstName
+                this.recipFName
             }
           }
         }
@@ -1283,8 +1285,8 @@ export default {
         key == "recipEmail" ||
         key == "email" ||
         key == "name" ||
-        key == "recipLastName" ||
-        key == "recipFirstName"
+        key == "recipLName" ||
+        key == "recipFName"
       ) {
         this.keyToUpdate = key
         this.showingEditingGiftDetails = true
@@ -1407,8 +1409,8 @@ export default {
       )
       this.giftMessage = this.userOrder?.giftMessage
       this.recipEmail = this.userOrder?.recipEmail
-      this.recipFirstName = this.userOrder?.recipFName
-      this.recipLastName = this.userOrder?.recipLName
+      this.recipFName = this.userOrder?.recipFName
+      this.recipLName = this.userOrder?.recipLName
       this.name = this.userOrder?.name
       this.email = this.userOder?.email
     } else {
@@ -1419,8 +1421,8 @@ export default {
       this.recipGiftDate = dayjs(this.user?.recipGiftDate).format("DD/MM/YYYY")
       this.giftMessage = this.user?.giftMessage
       this.recipEmail = this.user?.recipEmail
-      this.recipFirstName = this.user?.recipFName
-      this.recipLastName = this.user?.recipLName
+      this.recipFName = this.user?.recipFName
+      this.recipLName = this.user?.recipLName
       this.recipEmail = this.user?.recipEmail
       this.name = this.user?.name
       this.email = this.user?.email

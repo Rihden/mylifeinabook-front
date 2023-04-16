@@ -12,42 +12,6 @@
       @saveCover="checkCover($event)"
       class="desktop-view"
     ></router-view>
-    <!-- <div
-      class="help-button-container"
-      @click="showingFAQ = true"
-      v-if="!showingFAQ"
-    >
-      <img src="./assets/help.png" alt="" class="help-button" />
-    </div>
-    <div class="FAQ-section" v-else>
-      <span class="FAQ-section-title">Foire Aux Questions</span>
-      <div class="categories-container">
-        <div
-          class="FAQ-category-container"
-          v-for="(FAQcategory, keyCategories) in FAQ"
-          :key="keyCategories"
-        >
-          <div
-            class="FAQ-category-title-container"
-            @click="FAQcategory.isExpanded = !FAQcategory.isExpanded"
-          >
-            <span class="FAQ-category-title">{{ FAQcategory.title }}</span>
-            <img src="./assets/arrow-down.png" alt="" class="FAQ-expand-btn" />
-          </div>
-          <div class="FAQ-questions-container" v-if="FAQcategory.isExpanded">
-            <div
-              v-for="(FAQquestion, keyFAQQuestions) in FAQcategory.questions"
-              :key="keyFAQQuestions"
-            >
-              <span>{{ FAQquestion }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="close-FAQ" @click="showingFAQ = false">
-        <img src="./assets/close-FAQ.svg" alt="" />
-      </div>
-    </div> -->
   </div>
 </template>
 
