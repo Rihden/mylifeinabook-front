@@ -1250,7 +1250,7 @@ export default {
 
         this.autosaveInterval = setInterval(
           this.saveAnswer,
-          20000,
+          10000,
           this.selectedChapterIndex,
           this.SelectedStoryIndex
         )
