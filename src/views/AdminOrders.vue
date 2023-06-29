@@ -299,7 +299,10 @@
                 <div class="table-title-element">Creation Date</div>
                 <div class="table-title-element">End Contract</div>
               </div>
-              <div v-for="(order, orderIndex) in orders" :key="orderIndex">
+              <div
+                v-for="(order, orderIndex) in filteredOrders"
+                :key="orderIndex"
+              >
                 <div class="d-row table-row">
                   <div class="table-title-element">
                     <span>{{ order.isBuyer ? "Buyer" : "Recip" }}</span>
@@ -468,15 +471,9 @@ import { serverUrl } from "../severUrl"
 import dayjs from "dayjs"
 import axios from "axios"
 import Datepicker from "vuejs-datepicker"
-const timeStamp = new Date().getTime()
-const yesterdayTimeStamp = timeStamp - 24 * 60 * 60 * 1000
-const yesterdayDate = new Date(yesterdayTimeStamp)
+const yesterdayDate = dayjs().subtract(1, "day").format("YYYY-MM-DD")
+console.log("yesterdayDate", yesterdayDate)
 
-const statedate = {
-  disabledDates: {
-    to: yesterdayDate,
-  },
-}
 export default {
   components: {
     navbar,
@@ -518,9 +515,14 @@ export default {
       isResetQuestion: false,
       isToIwill: false,
       isSendingGiftEmail: false,
-      state: statedate,
+      state: {
+        disabledDates: {
+          to: new Date(yesterdayDate),
+        },
+      },
       noResult: true,
       multiOrderForRecip: false,
+      dateEndContract: "",
     }
   },
   methods: {
@@ -721,7 +723,6 @@ export default {
         this.loading = false
         this.isDeletingOrder = false
       } catch (e) {
-        console.log("helo", e)
         this.loading = false
         this.showingOverlay = false
         this.isDeletingOrder = false
@@ -964,14 +965,26 @@ export default {
         this.displayErrorMessage = true
       }
     },
+    calculateEndDate: (order) => {
+      order.dateEndContract = order?.dateEndContract
+        ? dayjs(order?.dateEndContract).format("MM/DD/YYYY")
+        : order?.recipGiftDate
+        ? dayjs(order?.recipGiftDate).add(1, "year").format("MM/DD/YYYY")
+        : dayjs(order?.creationDate).add(1, "year").format("MM/DD/YYYY")
+      return order
+    },
   },
   filters: {
     formatDate: (date) => {
       if (!date) {
         return null
       }
-
       return dayjs(date).format("MM/DD/YYYY")
+    },
+  },
+  computed: {
+    filteredOrders() {
+      return this.orders.map((order) => this.calculateEndDate(order))
     },
   },
 }

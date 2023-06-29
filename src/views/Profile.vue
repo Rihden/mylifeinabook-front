@@ -111,7 +111,194 @@
       <div class="route-section">
         <div class="profile-container">
           <div v-if="routeIndex == 0">
-            <vue-tabs type="pills" :start-index="1" direction="vertical">
+            <vue-tabs
+              type="pills"
+              :start-index="1"
+              direction="vertical"
+              v-model="activeTab"
+              @tab-change="handleTabChange"
+            >
+              <v-tab title="Extend program">
+                <div class="profile-panel">
+                  <div v-if="success" class="alert success">
+                    {{ message }}
+                  </div>
+                  <div v-else-if="error" class="alert error">
+                    {{ message }}
+                  </div>
+                  <div class="profile-route-title">
+                    <span>Renew subscription</span>
+                  </div>
+                  <div
+                    v-if="errorStatus.status"
+                    style="color: #eb4848; margin-bottom: 10px"
+                  >
+                    <img
+                      src="../assets/clear.png"
+                      height="10px"
+                      width="10px"
+                      alt=""
+                    />
+                    {{ errorStatus.message }}
+                  </div>
+                  <div>
+                    <div class="label-subsc-title">
+                      Your program ends on
+                      <span> {{ endDateSubscription }}</span>
+                    </div>
+                    <div class="label-subsc-title">
+                      Your program will not automatically renew.
+                    </div>
+                    <div class="label-subsc-title">
+                      An extension <span>($29/year)</span> gives access to your
+                      gift recipient to write for another year.
+                    </div>
+                    <div class="label-gift-title">
+                      What method of payment would you prefer?
+                    </div>
+                    <div class="d-row">
+                      <div class="label-subsc-title">
+                        Credit and debit cards
+                      </div>
+                    </div>
+                    <div class="d-row col-mobile">
+                      <stripe-element-card
+                        v-if="stripeLoaded"
+                        ref="elementRef"
+                        :pk="publishableKey"
+                        @token="createToken"
+                        class="stripe-card"
+                        :hidePostalCode="true"
+                      />
+                      <div
+                        style="
+                          margin-left: 10px;
+                          margin-right: 10px;
+                          margin-top: 15px;
+                        "
+                      >
+                        or
+                      </div>
+                      <div class="hide-button-text-overlay">
+                        <PayPal
+                          amount="29.00"
+                          currency="USD"
+                          :client="credentials"
+                          env="sandbox"
+                          :button-style="myStyle"
+                          @payment-completed="onApprove"
+                          @payment-cancelled="onError"
+                          ><template #paypal-button>
+                            <button
+                              class="custom-paypal-button"
+                              type="submit"
+                            ></button>
+                          </template>
+                        </PayPal>
+                      </div>
+                    </div>
+
+                    <button @click="submit" class="gift-btn ptr">
+                      Extend now for $29
+                    </button>
+                  </div>
+                </div>
+              </v-tab>
+              <v-tab title="Purchase copies">
+                <div class="profile-panel">
+                  <div v-if="success" class="alert success">
+                    {{ message }}
+                  </div>
+                  <div v-else-if="error" class="alert error">
+                    {{ message }}
+                  </div>
+                  <div class="profile-route-title">
+                    <span>Purchase copies</span>
+                  </div>
+                  <div>
+                    <div class="label-subsc-title">
+                      You have {{ quantity }} copies included in your
+                      subscription.
+                    </div>
+                    <div class="label-gift-title">
+                      How many copies would you like to purchase?
+                    </div>
+                    <select class="quantity-book" v-model="quantityBook">
+                      <option class="rounded-full" disabled selected>
+                        No extra books
+                      </option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5">5</option>
+                      <option value="6">6</option>
+                      <option value="7">7</option>
+                      <option value="8">8</option>
+                      <option value="9">9</option>
+                      <option value="10">10</option>
+                      <option value="11">11</option>
+                      <option value="12">12</option>
+                      <option value="13">13</option>
+                      <option value="14">14</option>
+                      <option value="15">15</option>
+                    </select>
+                    <div class="label-gift-title">
+                      What method of payment would you prefer?
+                    </div>
+                    <div class="d-row">
+                      <div class="label-subsc-title">
+                        Credit and debit cards
+                      </div>
+                    </div>
+                    <div class="d-row col-mobile">
+                      <stripe-element-card
+                        ref="elementRefQ"
+                        v-if="stripePurLoaded"
+                        :pk="publishableKey"
+                        @token="createTokenForQuantity"
+                        class="stripe-card"
+                        :hidePostalCode="true"
+                      />
+                      <div
+                        style="
+                          margin-left: 10px;
+                          margin-right: 10px;
+                          margin-top: 15px;
+                        "
+                      >
+                        or
+                      </div>
+                      <div class="hide-button-text-overlay">
+                        <PayPal
+                          :amount="`${
+                            30 *
+                            (quantityBook === 'No extra books'
+                              ? 1
+                              : quantityBook)
+                          }`"
+                          currency="USD"
+                          :client="credentials"
+                          env="sandbox"
+                          :button-style="myStyle"
+                          @payment-completed="onApproveQuantityPayment"
+                          @payment-cancelled="onError"
+                          commit="true"
+                          ><template #paypal-button>
+                            <button
+                              class="custom-paypal-button"
+                              type="submit"
+                            ></button>
+                          </template>
+                        </PayPal>
+                      </div>
+                    </div>
+                    <button @click="submitQuantity" class="gift-btn ptr">
+                      Purchase
+                    </button>
+                  </div>
+                </div>
+              </v-tab>
               <v-tab
                 title="Gift details"
                 v-if="user.isBuyer == 1 && user.guest == 1"
@@ -923,15 +1110,16 @@
 <script>
 import axios from "axios"
 import navbar from "../components/navbar.vue"
-//local registration
+import PayPal from "vue-paypal-checkout" //local registration
 import { VueTabs, VTab } from "vue-nav-tabs"
 //you can also import this in your style tag
 import "vue-nav-tabs/themes/vue-tabs.css"
 import { serverUrl } from "../severUrl"
 import dayjs from "dayjs"
 import customParseFormat from "dayjs/plugin/customParseFormat"
-
 import Datepicker from "vuejs-datepicker"
+import { StripeElementCard } from "@vue-stripe/vue-stripe"
+
 const timeStamp = new Date().getTime()
 const yesterdayTimeStamp = timeStamp - 24 * 60 * 60 * 1000
 const yesterdayDate = new Date(yesterdayTimeStamp)
@@ -941,8 +1129,11 @@ const statedate = {
     to: yesterdayDate,
   },
 }
+
 export default {
   data() {
+    this.publishableKey = process.env.VUE_APP_STRIPE_PUBLISHABLE_KEY
+
     return {
       loading: false,
       showingOverlay: false,
@@ -950,6 +1141,8 @@ export default {
       newPw1: "",
       newPw2: "",
       oldPw: "",
+      quantityBook: "No extra books",
+      quantity: 1,
       field1Error: false,
       field2Error: false,
       field3Error: false,
@@ -982,16 +1175,37 @@ export default {
       isEditingGiftDetails: false,
       showingEditingGiftMessage: false,
       isEditingGiftMessage: false,
+      endDateSubscription: "",
       userOrder: {},
+      stripeLoaded: true,
       keyToUpdate: "",
       emailForgot: "",
+      credentials: {
+        sandbox: process.env.VUE_APP_PAYPAL_SANDBOX_CLIENT_ID,
+        production: process.env.VUE_APP_PAYPAL_SANDBOX_CLIENT_ID_PROD,
+      },
+      myStyle: {
+        size: "medium",
+        label: "paypal",
+        shape: "pill",
+        color: "silver",
+        tagline: false,
+      },
+      token: null,
+      success: false,
+      error: false,
+      message: "",
+      activeTab: "",
+      stripePurLoaded: false,
     }
   },
   components: {
     navbar,
     VueTabs,
+    PayPal,
     VTab,
     Datepicker,
+    StripeElementCard,
   },
   methods: {
     logout: async function () {
@@ -1015,6 +1229,112 @@ export default {
         }
       }
     },
+    handleTabChange(tabIndex, newTab) {
+      this.initMessage()
+      console.log(tabIndex)
+      if (newTab.title === "Extend program") this.stripeLoaded = true
+      else this.stripeLoaded = false
+      if (newTab.title === "Purchase copies") this.stripePurLoaded = true
+      else this.stripePurLoaded = false
+    },
+    onApprove: async function (data) {
+      this.initMessage()
+      try {
+        this.loading = true
+        this.showingOverlay = true
+        if (data?.state === "approved") {
+          const result = await axios.post(
+            serverUrl + "/api/payment/add-payment",
+            {
+              userId: this.user._id,
+              orderId:
+                Object.keys(this.userOrder).length === 0
+                  ? this.user?.orderId
+                  : this.userOrder?.orderId,
+              type: "ext1year",
+              total: data?.transactions[0]?.amount?.total,
+              quantity: 1,
+              cart: data?.cart,
+              paymentMethod: data?.payer?.payment_method,
+              paymentId: data?.id,
+              state: data?.state,
+              createdTime: data?.create_time,
+              currency: data?.transactions[0]?.amount?.currency,
+              endDate: this.endDateSubscription,
+            },
+            { withCredentials: true }
+          )
+          this.endDateSubscription = result?.data?.newEndDate
+          if (result?.data?.success) {
+            this.success = true
+            this.message =
+              "Successful transaction. Your program renewal is now confirmed."
+          } else {
+            this.error = true
+            this.message = "error with payment"
+          }
+        }
+        this.showingOverlay = false
+        this.loading = false
+      } catch (e) {
+        this.error = true
+        this.message = "error with payment"
+        this.showingOverlay = false
+        this.loading = false
+        console.log("e", e.message)
+      }
+    },
+    onApproveQuantityPayment: async function (data) {
+      this.initMessage()
+      try {
+        this.loading = true
+        this.showingOverlay = true
+        if (data?.state === "approved") {
+          const result = await axios.post(
+            serverUrl + "/api/payment/quantity-paypal-payment",
+            {
+              userId: this.user._id,
+              orderId:
+                Object.keys(this.userOrder).length === 0
+                  ? this.user?.orderId
+                  : this.userOrder?.orderId,
+              type: "extQuantity",
+              total: data?.transactions[0]?.amount?.total,
+              cart: data?.cart,
+              paymentMethod: data?.payer?.payment_method,
+              paymentId: data?.id,
+              state: data?.state,
+              createdTime: data?.create_time,
+              currency: data?.transactions[0]?.amount?.currency,
+              quantity:
+                this.quantityBook === "No extra books" ? 1 : this.quantityBook,
+            },
+            { withCredentials: true }
+          )
+          this.quantity = result?.data?.quantity
+          if (result?.data?.success) {
+            this.success = true
+            this.message =
+              "Transaction completed successfully. Your additional copies have been incorporated into your program."
+          } else {
+            this.error = true
+            this.message = "error with payment"
+          }
+        }
+        this.showingOverlay = false
+        this.loading = false
+      } catch (e) {
+        this.error = true
+        this.message = "error with payment"
+        this.showingOverlay = false
+        this.loading = false
+        console.log("e", e.message)
+      }
+    },
+    onError: function (err) {
+      console.log("err", err)
+      // Gérez les erreurs lors du paiement
+    },
     togglePassword: function (index) {
       if (index == 1) {
         if (this.passwordStates1 === "password") {
@@ -1037,6 +1357,13 @@ export default {
           this.passwordStates3 = "password"
         }
       }
+    },
+    validateQuantityBook() {
+      console.log(
+        "Number.isInteger(this.quantityBook)",
+        Number.isInteger(this.quantityBook)
+      )
+      return Number.isInteger(this.quantityBook)
     },
     updatePassword: async function () {
       this.field1Error = false
@@ -1371,6 +1698,116 @@ export default {
         this.showingOverlay = false
       }
     },
+    submit() {
+      // this will trigger the process
+      this.$refs.elementRef.submit()
+    },
+    submitQuantity() {
+      this.$refs.elementRefQ.submit()
+    },
+
+    async createToken(token) {
+      try {
+        this.initMessage()
+        this.loading = true
+        this.showingOverlay = true
+        const result = await axios.post(
+          serverUrl + "/api/payment/add-stripe-payment",
+          {
+            token,
+            amount: 2900,
+            currency: "USD",
+            description: "extend",
+            userId: this.user._id,
+            orderId:
+              Object.keys(this.userOrder).length === 0
+                ? this.user?.orderId
+                : this.userOrder?.orderId,
+            type: "ext1year",
+            endDate: this.endDateSubscription,
+          }
+        )
+        if (result?.data?.success) {
+          this.endDateSubscription = result?.data?.newEndDate
+          this.success = true
+          this.message =
+            "Successful transaction. Your program renewal is now confirmed."
+        } else {
+          this.error = true
+          this.message = "error with payment"
+          console.log("erreur")
+        }
+        this.loading = false
+        this.showingOverlay = false
+      } catch (e) {
+        this.loading = false
+        this.error = true
+        this.message = "error with payment"
+        this.showingOverlay = true
+        console.log(e)
+      }
+
+      // handle the token
+      // send it to your server
+    },
+    initMessage() {
+      this.error = false
+      this.success = false
+      this.message = ""
+    },
+    async createTokenForQuantity(token) {
+      this.initMessage()
+      if (
+        this.quantityBook === "No extra books" ||
+        parseInt(this.quantityBook) <= 0
+      ) {
+        this.error = true
+        this.message = "Kindly select the quantity."
+        return
+      }
+      try {
+        this.loading = true
+        this.showingOverlay = true
+
+        const result = await axios.post(
+          serverUrl + "/api/payment/quantity-stripe-payment",
+          {
+            token,
+            amount: 3000 * this.quantityBook,
+            currency: "USD",
+            description: "quanity extend",
+            quantity: this.quantityBook,
+            orderId:
+              Object.keys(this.userOrder).length === 0
+                ? this.user?.orderId
+                : this.userOrder?.orderId,
+            type: "extQuantity",
+            userId: this.user._id,
+          }
+        )
+        if (result?.data?.success) {
+          this.quantity = result?.data?.quantity
+          this.success = true
+          this.message =
+            "Transaction completed successfully. Your additional copies have been incorporated into your program."
+        } else {
+          this.error = true
+          this.message = "error with payment"
+          console.log("erreur")
+        }
+        this.loading = false
+        this.showingOverlay = false
+      } catch (e) {
+        this.loading = false
+        this.error = true
+        this.message = "error with payment"
+        this.showingOverlay = true
+        console.log(e)
+      }
+
+      // handle the token
+      // send it to your server
+    },
   },
   computed: {
     user: function () {
@@ -1396,7 +1833,6 @@ export default {
       console.log(err.message)
     }
   },
-
   created() {
     if (!this.isPrincipalOrder) {
       this.userOrder = this.user?.listOrders[this.getIndexOrder]
@@ -1412,7 +1848,17 @@ export default {
       this.recipFName = this.userOrder?.recipFName
       this.recipLName = this.userOrder?.recipLName
       this.name = this.userOrder?.name
-      this.email = this.userOder?.email
+      this.email = this.userOrder?.email
+      this.quantity = this?.userOrder?.quantity ? this?.userOrder?.quantity : 1
+      this.endDateSubscription = this.userOrder.dateEndContract
+        ? dayjs(this.userOrder?.dateEndContract).format("MM/DD/YYYY")
+        : this.userOrder?.recipGiftDate
+        ? dayjs(this.userOrder?.recipGiftDate)
+            .add(1, "year")
+            .format("MM/DD/YYYY")
+        : dayjs(this.userOrder?.creationDate)
+            .add(1, "year")
+            .format("MM/DD/YYYY")
     } else {
       this.mailFrequence = this.user.mailFrequence
       this.disableGustResponse = this.user.disableGustResponse
@@ -1426,6 +1872,12 @@ export default {
       this.recipEmail = this.user?.recipEmail
       this.name = this.user?.name
       this.email = this.user?.email
+      this.endDateSubscription = this.user.dateEndContract
+        ? dayjs(this.user?.dateEndContract).format("MM/DD/YYYY")
+        : this.user?.recipGiftDate
+        ? dayjs(this.user?.recipGiftDate).add(1, "year").format("MM/DD/YYYY")
+        : dayjs(this.user?.creationDate).add(1, "year").format("MM/DD/YYYY")
+      this.quantity = this?.user?.quantity ? this?.user?.quantity : 1
     }
   },
 }
@@ -1441,6 +1893,9 @@ export default {
 .vue-tabs .nav-pills > li > a {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
+}
+.paypal-button-text {
+  display: none;
 }
 .vue-tabs .nav-pills > li.active > a,
 .vue-tabs .nav-pills > li.active > a:hover,
@@ -1494,8 +1949,33 @@ export default {
   color: #14473c;
   box-sizing: border-box;
 }
+#stripe-element-mount-point {
+  height: 50px;
+  padding: 15px 20px;
+  border-radius: 20px;
+  box-shadow: none;
+  border: 1px solid rgba(6, 42, 32, 0.1);
+}
+.custom-paypal-button {
+  /* Appliquer ici le style souhaité pour le bouton */
+  /* Par exemple, définir un fond sans texte */
+  background-color: transparent;
+  border: none;
+  /* Définir la taille et la position du bouton */
+  width: 150px;
+  height: 50px;
+  /* Masquer le texte en ajustant la position du fond */
+  background-position: -9999px -9999px;
+  overflow: hidden;
+}
+.paypal-button-text {
+  display: none !important;
+}
 </style>
 <style scoped>
+.paypal-button-text {
+  display: none !important;
+}
 .profile-panel {
   /* white/white */
   background: #ffffff;
@@ -1505,6 +1985,16 @@ export default {
   box-sizing: border-box;
   height: 100%;
   flex-grow: 1;
+}
+.paypal-message {
+  display: none;
+}
+.quantity-book {
+  border: 1px solid rgba(6, 42, 32, 0.1);
+  border-radius: 20px;
+  padding: 10px 10px;
+  width: 200px;
+  background: transparent;
 }
 
 .profile-routes-container {
@@ -1518,7 +2008,21 @@ export default {
   font-weight: 300;
   color: rgba(6, 42, 32, 0.4);
 }
+.hide-button-text-overlay {
+  position: relative;
+  z-index: 1;
+}
 
+.hide-button-text-overlay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  pointer-events: none;
+}
 .profile-route.active {
   background: #e1504b;
   border-radius: 10px 0px 0px 10px;
@@ -1577,6 +2081,11 @@ export default {
 .update-password {
   background: white;
 }
+button:disabled {
+  background-color: #f6f4f3;
+  color: #14473c61;
+  border: 1px solid #14473c0a;
+}
 
 .profile-container {
   height: 100%;
@@ -1633,6 +2142,16 @@ export default {
   line-height: 27px;
   color: #14473c;
   margin-top: 15px;
+}
+.label-subsc-title {
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 27px;
+  color: #14473c;
+  margin-top: 15px;
+}
+.label-subsc-title span {
+  color: #e1504b;
 }
 .gift-register-textarea {
   border: none;
@@ -1776,6 +2295,20 @@ export default {
   -ms-user-select: none;
   user-select: none;
 }
+.alert {
+  padding: 10px;
+  margin-bottom: 10px;
+  color: #fff;
+  font-weight: bold;
+}
+
+.success {
+  background-color: green;
+}
+
+.error {
+  background-color: red;
+}
 
 /* Hide the browser's default radio button */
 .container-radio input {
@@ -1826,6 +2359,10 @@ export default {
   border-radius: 50%;
   background: white;
 }
+.stripe-card {
+  width: 50%;
+}
+
 @media screen and (max-width: 1024px) {
   /* .container {
     min-height: 100%;
@@ -1905,6 +2442,12 @@ export default {
   .profile-btn-container {
     margin-top: 18px;
     text-align: center;
+  }
+  .d-row.col-mobile {
+    flex-direction: column;
+  }
+  .stripe-card {
+    width: 100%;
   }
 }
 </style>
